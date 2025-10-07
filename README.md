@@ -10,23 +10,10 @@ A aplicação é dividida em duas partes principais: **Front-end (ReactJS)** e *
 A arquitetura está dividida em duas camadas principais:
 
 plataforma-divulgacao-tcc/
-├── frontend/ # Aplicação ReactJS (interface do usuário)
-│ ├── src/
-│ │ ├── components/ # Componentes reutilizáveis
-│ │ ├── pages/ # Páginas do site
-│ │ ├── services/ # Comunicação com a API
-│ │ └── styles/ # Estilos e temas
-│ └── package.json
-│
-├── backend/ # API desenvolvida com AdonisJS
-│ ├── app/
-│ │ ├── Controllers/ # Controladores das rotas
-│ │ ├── Models/ # Modelos de dados (Firebase)
-│ │ └── Validators/ # Validações de entrada
-│ ├── config/ # Configuração do Firebase e servidor
-│ └── package.json
-│
-└── README.md
+- frontend/ # Aplicação ReactJS (interface do usuário)
+- backend/ # API desenvolvida com AdonisJS
+- docs/ # Modelos e Documentos Adicionais
+- README.md
 ---
 
 ## Tecnologias Utilizadas
@@ -81,6 +68,8 @@ npm start
 
 O site abrirá em:
 > http://localhost:3000
+
+---
 
 ### Desenvolvido por
 
