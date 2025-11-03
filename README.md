@@ -70,6 +70,24 @@ O site abrirá em:
 > http://localhost:3000
 
 ---
+### Configurando o Firebase
+
+**Acesse Firebase Console**
+.
+
+Clique em Adicionar projeto e siga os passos para criar um novo projeto.
+
+Habilite Firestore Database no modo Start in test mode (pode mudar depois para produção).
+
+Habilite Authentication → Email/Password.
+
+**Criar chave de serviço (Service Account)**
+
+No Firebase Console, vá em Project Settings → Service Accounts.
+
+Clique em Generate new private key.
+
+Baixe o arquivo, renomei para serviceAccountKey.json e coloque na raiz do projeto backend (/backend).
 
 ### Desenvolvido por
 
