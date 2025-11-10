@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import WorkCard from "../../Components/WorkCard";
 import Header from "../../Components/Header";
+import FilterDropdown from "./FilterDropdown";
 import { GridContainer } from "./styles";
 
 export default function Home() {
@@ -8,6 +9,10 @@ export default function Home() {
   const [columns, setColumns] = useState(
     Math.floor(window.innerWidth / baseWidth)
   );
+
+  const handleSearch = (term) => {
+    console.log("Buscando por:", term);
+  };
 
   const trabalhos = [
     {
@@ -44,7 +49,13 @@ export default function Home() {
 
   return (
     <>
-      <Header></Header>
+      <>
+        <Header
+          enableSearch={true}
+          onSearch={handleSearch}
+          FilterDropdown={FilterDropdown}
+        />
+      </>
       <h2 className="mb-4">Trabalhos Acadêmicos</h2>
       <GridContainer columns={columns} className="py-4">
         {trabalhos.map((t, index) => (
