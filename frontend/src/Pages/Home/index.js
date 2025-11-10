@@ -1,6 +1,14 @@
+import React, { useState, useEffect } from "react";
 import WorkCard from "../../Components/WorkCard";
+import Header from "../../Components/Header";
+import { GridContainer } from "./styles";
 
 export default function Home() {
+  const baseWidth = 400;
+  const [columns, setColumns] = useState(
+    Math.floor(window.innerWidth / baseWidth)
+  );
+
   const trabalhos = [
     {
       title: "Análise de Dados em Ambientes de IoT",
@@ -20,20 +28,37 @@ export default function Home() {
     },
   ];
 
-  return (
-    <div className="container py-4">
-      <h2 className="mb-4">Trabalhos Acadêmicos</h2>
+  useEffect(() => {
+    const calculateColumns = () => {
+      const windowWidth = window.innerWidth; // Largura da janela
+      const numberOfColumns = Math.floor(windowWidth / baseWidth); // Calcula o número de colunas
+      setColumns(numberOfColumns); // Atualiza o estado com o número de colunas calculado
+    };
+    calculateColumns();
+    window.addEventListener("resize", calculateColumns);
 
-      {trabalhos.map((t, index) => (
-        <WorkCard
-          key={index}
-          title={t.title}
-          author={t.author}
-          date={t.date}
-          labels={t.labels}
-          description={t.description}
-        />
-      ))}
-    </div>
+    return () => {
+      window.removeEventListener("resize", calculateColumns);
+    };
+  }, []);
+
+  return (
+    <>
+      <Header></Header>
+      <h2 className="mb-4">Trabalhos Acadêmicos</h2>
+      <GridContainer columns={columns} className="py-4">
+        {trabalhos.map((t, index) => (
+          <div key={index} className="work-card">
+            <WorkCard
+              title={t.title}
+              author={t.author}
+              date={t.date}
+              labels={t.labels}
+              description={t.description}
+            />
+          </div>
+        ))}
+      </GridContainer>
+    </>
   );
 }

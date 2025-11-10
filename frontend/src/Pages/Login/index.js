@@ -2,35 +2,38 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, Link } from "react-router-dom";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-import API from '../../Services/api'
-import Cookies from 'js-cookie'
-
+import API from "../../Services/api";
+import Cookies from "js-cookie";
 
 export default function Login() {
-  const { register, handleSubmit, formState: { errors } } = useForm();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
   const onSubmit = async (data) => {
     try {
-      const res = await API.post('/auth/login', {
+      const res = await API.post("/auth/login", {
         email: data.login,
         password: data.senha,
-      })
+      });
 
-      console.log('Login bem-sucedido:', res.data)
-      Cookies.set('token', res.data.token)
-      navigate('/home')
+      console.log("Login bem-sucedido:", res.data);
+      Cookies.set("token", res.data.token);
+      navigate("/home");
     } catch (err) {
-      console.error(err)
+      console.error(err);
       if (err.response?.status === 404) {
         setErrorMessage("Usuário não encontrado");
       } else {
         setErrorMessage(err.response?.data?.error || "Erro de conexão");
       }
     }
-  }
+  };
 
   return (
     <div className="d-flex justify-content-center align-items-center vh-100 bg-light">
@@ -71,7 +74,9 @@ export default function Login() {
               </button>
             </div>
             {errors.senha && (
-              <div className="invalid-feedback d-block">{errors.senha.message}</div>
+              <div className="invalid-feedback d-block">
+                {errors.senha.message}
+              </div>
             )}
           </div>
 

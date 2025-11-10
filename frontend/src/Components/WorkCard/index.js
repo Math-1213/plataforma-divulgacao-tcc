@@ -1,34 +1,39 @@
+// Components/WorkCard.js
 import PropTypes from "prop-types";
+import {
+  Card,
+  CardTitle,
+  CardSubtitle,
+  Label,
+  Description,
+  NoLabels,
+} from "./styles";
 
 export default function WorkCard({ title, author, date, labels, description }) {
   return (
-    <div className="card shadow-sm mb-4">
+    <Card className="shadow-sm mb-4">
       <div className="card-body">
         {/* Título */}
-        <h5 className="card-title mb-2">{title}</h5>
+        <CardTitle className="card-title mb-2">{title}</CardTitle>
 
         {/* Autor e Data */}
-        <h6 className="card-subtitle text-muted mb-3">
+        <CardSubtitle className="card-subtitle text-muted mb-3">
           {author} • {new Date(date).toLocaleDateString("pt-BR")}
-        </h6>
+        </CardSubtitle>
 
         {/* Labels */}
         <div className="mb-3">
           {labels && labels.length > 0 ? (
-            labels.map((label, i) => (
-              <span key={i} className="badge bg-primary me-2">
-                {label}
-              </span>
-            ))
+            labels.map((label, i) => <Label key={i}>{label}</Label>)
           ) : (
-            <span className="text-muted">Sem temas definidos</span>
+            <NoLabels>Sem temas definidos</NoLabels>
           )}
         </div>
 
         {/* Descrição */}
-        <p className="card-text">{description}</p>
+        <Description className="card-text">{description}</Description>
       </div>
-    </div>
+    </Card>
   );
 }
 
