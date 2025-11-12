@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   HeaderWrapper,
@@ -9,6 +9,7 @@ import {
 } from "./styles";
 import { FaHome, FaUserCircle } from "react-icons/fa";
 import { RiLogoutBoxRLine } from "react-icons/ri";
+import Cookies from "js-cookie";
 
 export default function Header({
   enableSearch = false,
@@ -19,6 +20,19 @@ export default function Header({
   const [showAccount, setShowAccount] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCloseTrigger, setFilterCloseTrigger] = useState(false);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const userCookie = Cookies.get("user");
+    if (userCookie) {
+      try {
+        const parsedUser = JSON.parse(userCookie);
+        setUser(parsedUser);
+      } catch (err) {
+        console.error("Erro ao ler cookie do usuário:", err);
+      }
+    }
+  }, []);
 
   function logout() {
     console.log("Logout");
@@ -79,10 +93,9 @@ export default function Header({
               <AccountDropdown>
                 <div className="user-info">
                   <p>
-                    <strong>Matheus Felipe Prudente</strong>
+                    <strong>{user ? `${user.name}` : ""}</strong>
                   </p>
-                  <p>Engenharia de Computação</p>
-                  <p>7º Semestre</p>
+                  {user?.course && <p>{user.course.name}</p>}
                 </div>
                 <hr />
                 <button onClick={() => navigate("/myworks")}>
