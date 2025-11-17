@@ -22,8 +22,13 @@ export default function Login() {
         password: data.senha,
       });
 
-      console.log("Login bem-sucedido:", res.data);
-      Cookies.set("token", res.data.token);
+      const { token, user } = res.data;
+
+      // Armazena em cookies
+      Cookies.set("token", token, { expires: 7 }); // expira em 7 dias
+      Cookies.set("user", JSON.stringify(user), { expires: 7 });
+
+      console.log("Login bem-sucedido:", user);
       navigate("/home");
     } catch (err) {
       console.error(err);
