@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { DropdownWrapper } from "../styles";
+import { FaCaretDown } from "react-icons/fa";
 
 export default function FilterDropdown({ onFilterChange, closeTrigger }) {
   const filterOptions = ["Autor", "Curso", "Tema"];
@@ -45,7 +46,12 @@ export default function FilterDropdown({ onFilterChange, closeTrigger }) {
         className="dropdown-btn"
         onClick={() => setOpen(!open)}
       >
-        Filtros ▼
+        <div>
+          <span style={{fontSize: 16, color:"white"}}>
+            Filtros
+          </span>
+          <FaCaretDown size={20} color="white" />
+        </div>
       </button>
 
       {open && (

@@ -9,7 +9,7 @@ export const Container = styled.div`
 `;
 
 // Estilo do Card
-export const Card = styled.div`
+export const Card = styled.button`
   display: flex;
   flex-direction: column;
   background: #fff;
