@@ -4,6 +4,7 @@ import Home from "../Pages/Home";
 import Login from "../Pages/Login";
 import WorkInfo from "../Pages/WorkInfo";
 import AddWork from "../Pages/AddWork";
+import Register from "../Pages/UserCreate";
 
 export default function Router() {
   return (
@@ -15,6 +16,7 @@ export default function Router() {
         <Route path="/home" element={<Home />} />
         <Route path="/addworks" element={<AddWork />} />
         <Route path="/myworks" element={<WorkInfo />} />
+        <Route path="/register" element={<Register />} />
       </Routes>
     </>
   );
