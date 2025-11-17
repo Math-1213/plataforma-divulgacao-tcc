@@ -21,3 +21,4 @@ router.resource('labels', '#controllers/labels_controller').apiOnly()
 // Auth
 router.post('/auth/signup', [AuthController, 'signup'])
 router.post('/auth/login', [AuthController, 'login'])
+router.get('/courses/list',[CoursesController, 'listCourses'])
