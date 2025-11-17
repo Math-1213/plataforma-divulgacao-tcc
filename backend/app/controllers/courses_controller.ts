@@ -9,6 +9,8 @@ import { db } from '../../config/firebase.js'
  * }
  */
 export default class CoursesController {
+  private collection = db.collection('courses')
+
   public async listCourses({ response }: HttpContext) {
     try {
       const snapshot = await db.collection('courses').get()
@@ -26,7 +28,8 @@ export default class CoursesController {
     } catch (err: any) {
       console.error(err)
       return response.status(500).json({ error: err.message })
-  private collection = db.collection('courses')
+    }
+  }
 
   /**
    * GET /courses
