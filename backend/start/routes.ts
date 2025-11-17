@@ -12,3 +12,4 @@ router.get('/', async () => {
 
 router.post('/auth/signup', [AuthController, 'signup'])
 router.post('/auth/login', [AuthController, 'login'])
+router.get('/courses/list',[CoursesController, 'listCourses'])
