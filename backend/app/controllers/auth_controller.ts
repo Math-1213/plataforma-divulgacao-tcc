@@ -24,11 +24,14 @@ export default class AuthController {
         displayName: name,
       })
 
+      // Gera referência de curso
+       const courseRef = db.collection('courses').doc(courseId)
+
       // Cria usuário no Firestore
       await db.collection('users').doc(userRecord.uid).set({
         name,
         email,
-        courseId,
+        courseRef,
         profileId: null,
         isAdmin: false,
         workIds: [],
