@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, Link } from "react-router-dom";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
@@ -17,6 +17,13 @@ export default function Register() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [courses, setCourses] = useState([]);
+
+  useEffect(() => {
+    API.get("/courses/list")
+      .then(res => setCourses(res.data))
+      .catch(err => console.error(err));
+  }, []);
 
   const onSubmit = async (data) => {
     try {
@@ -79,21 +86,19 @@ export default function Register() {
           </div>
 
           {/* courseId */}
-          <div className="mb-3">
-            <label className="form-label">Curso</label>
-            <input
-              type="number"
-              className={`form-control ${errors.courseId ? "is-invalid" : ""}`}
-              placeholder="Ex: 1"
-              {...register("courseId", {
-                required: "O ID do curso é obrigatório",
-                min: { value: 1, message: "ID inválido" },
-              })}
-            />
-            {errors.courseId && (
-              <div className="invalid-feedback">{errors.courseId.message}</div>
-            )}
-          </div>
+          <select
+            className={`form-control ${errors.courseId ? "is-invalid" : ""}`}
+            {...register("courseId", { required: "Selecione um curso" })}
+          >
+            <option value="">Selecione um curso</option>
+  
+            {courses.map(c => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+
 
           {/* Senha */}
           <div className="mb-3">
