@@ -1,3 +1,12 @@
+import Header from "../../Components/Header";
+
 export default function UserEdit() {
-  return <h1>Página Inicial</h1>;
+  return (
+  <>
+    {/* Cabeçalho sem busca */}
+          <Header
+            enableSearch={false}
+          />
+  </>
+  );
 }
