@@ -71,6 +71,7 @@ export default class AuthController {
 
       // Monta o retorno
       const user = {
+        id: userDoc.id,
         name: userData?.name,
         email: userData?.email,
         isAdmin: userData?.isAdmin,
