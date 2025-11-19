@@ -1,0 +1,54 @@
+# Docker Compose para Desenvolvimento
+# Use: docker-compose -f docker-compose.dev.yml up
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: plataforma-backend-dev
+    ports:
+      - "3333:3333"
+    environment:
+      - NODE_ENV=development
+      - PORT=3333
+      - HOST=0.0.0.0
+      - APP_KEY=${APP_KEY:-dev-app-key-change-in-production}
+      - LOG_LEVEL=debug
+    volumes:
+      # Montar código fonte para hot-reload
+      - ./backend:/app
+      - /app/node_modules
+      # Montar serviceAccountKey.json
+      - ./backend/serviceAccountKey.json:/app/serviceAccountKey.json:ro
+    restart: unless-stopped
+    networks:
+      - plataforma-network
+    command: npm run dev
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: plataforma-frontend-dev
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_LOCAL_URL=http://localhost:3333
+      - REACT_APP_URL=http://localhost:3000
+      - CHOKIDAR_USEPOLLING=true
+    volumes:
+      # Montar código fonte para hot-reload
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - plataforma-network
+    command: npm start
+
+networks:
+  plataforma-network:
+    driver: bridge
+
