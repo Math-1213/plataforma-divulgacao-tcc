@@ -12,12 +12,12 @@ export default class WorksController {
       // 1. Verifica a autenticação manualmente
       const authHeader = request.header('Authorization')
       if (!authHeader) {
-        return response.status(401).json({ error: 'Token de autorização ausente.' })
-      }
+        return response.status(401).json({ error: 'Token de autorização ausente.' })     
+      } 
       const token = authHeader.replace('Bearer ', '')
       const decodedToken = await auth.verifyIdToken(token)
       uploaderId = decodedToken.uid
-
+      
       if (!uploaderId) {
         return response.status(401).json({ error: 'Token inválido ou expirado.' })
       }
@@ -31,7 +31,7 @@ export default class WorksController {
       const workFile = request.file('work_file', {
         size: '10mb', // Limite de 10MB
         // Defina os tipos de arquivo que você aceita
-        extnames: ['pdf', 'doc', 'docx', 'zip', 'png', 'jpg'],
+        extnames: ['pdf', 'doc', 'docx', 'zip', 'png', 'jpg', 'txt'],
       })
 
       if (!workFile) {
