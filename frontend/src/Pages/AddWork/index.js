@@ -147,12 +147,17 @@ export default function AddWork() {
     formData.append('courseId', selectedCourseId);
     
     // Envia os arrays de IDs como JSON string
-    formData.append('authorIds', JSON.stringify([selectedAuthorIds]));
+    formData.append('authorIds', JSON.stringify(selectedAuthorIds));
     formData.append('labelsIds', JSON.stringify(selectedLabelIds));
     formData.append('uploaderId', UserID);
 
     try {
-      await api.post('/works', formData);
+      await api.post("/works", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
       setLoading(false);
       alert('Trabalho enviado com sucesso!');
       navigate('/my-works');
@@ -281,7 +286,7 @@ export default function AddWork() {
 
         {/* ARQUIVO */}
         <label style={labelStyle}>Arquivo (Obrigatório):</label>
-        <input style={inputStyle} type="file" onChange={handleFileChange} required />
+        <input style={inputStyle} type="file" name="work_file" onChange={handleFileChange} required />
         
         <button type="submit" style={{...inputStyle, background: '#28a745', color: 'white', cursor: 'pointer', fontWeight: 'bold'}} disabled={loading}>
           {loading ? 'Enviando...' : 'Enviar Trabalho'}

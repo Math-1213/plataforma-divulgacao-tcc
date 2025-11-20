@@ -1,6 +1,5 @@
 import type { HttpContext } from '@adonisjs/core/http'
-import { db, auth, storage } from '../../config/firebase.js'
-import { v4 as uuidv4 } from 'uuid' // Para nomes de arquivo únicos
+import { db, auth } from '../../config/firebase.js'
 
 export default class WorksController {
   /**
@@ -11,11 +10,13 @@ export default class WorksController {
     // 2. Lógica do método
     try {
       // 2a. Pegar o arquivo
+      console.log(request.body())
       const workFile = request.file('work_file', {
         size: '10mb', // Limite de 10MB
         // Defina os tipos de arquivo que você aceita
         extnames: ['pdf', 'doc', 'docx', 'zip', 'png', 'jpg', 'txt'],
       })
+      console.log("Workfile: ", workFile)
 
       if (!workFile) {
         return response.status(400).json({ error: 'Nenhum arquivo enviado.' })
@@ -31,6 +32,7 @@ export default class WorksController {
       try {
         authorIds = authorIdsString ? JSON.parse(authorIdsString) : []
         labelsIds = labelsIdsString ? JSON.parse(labelsIdsString) : []
+        authorIds.push(uploaderId)
       } catch (e) {
         return response.status(400).json({ error: 'Formato inválido para authorIds ou labelsIds.' })
       }
@@ -41,18 +43,18 @@ export default class WorksController {
         })
       }
 
-      // 3. Fazer o upload para o Firebase Storage
-      const bucket = storage.bucket() // Pega o bucket padrão
-      const fileName = `works/${uploaderId}/${uuidv4()}-${workFile.clientName}`
+      // 3. Fazer o upload para o Bucket
+      // const bucket = storage.bucket() // Pega o bucket padrão
+      // const fileName = `works/${uploaderId}/${uuidv4()}-${workFile.clientName}`
       
       // Faz o upload a partir do caminho temporário que o Adonis criou
-      await bucket.upload(workFile.tmpPath!, {
-        destination: fileName,
-        public: true, // Torna o arquivo publicamente legível
-      })
+      // await bucket.upload(workFile.tmpPath!, {
+      //   destination: fileName,
+      //   public: true, // Torna o arquivo publicamente legível
+      // })
 
       // 4. Obter a URL pública de download
-      const fileURL = `https://storage.googleapis.com/${bucket.name}/${fileName}`
+      // const fileURL = `https://storage.googleapis.com/${bucket.name}/${fileName}`
 
       // 5. Salvar metadados no Firestore
       const finalAuthorIds = [...new Set([...authorIds, uploaderId])]
@@ -68,7 +70,7 @@ export default class WorksController {
         creationDate: new Date(),
         
         // --- Novos campos do arquivo ---
-        fileURL: fileURL,
+        // fileURL: fileURL,
         fileName: workFile.clientName,
         fileSize: workFile.size,
         fileType: workFile.extname,
