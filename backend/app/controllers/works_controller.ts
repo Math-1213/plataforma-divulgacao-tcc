@@ -7,23 +7,6 @@ export default class WorksController {
    * Cria um novo trabalho com upload de arquivo (POST /works)
    */
   public async store({ request, response }: HttpContext) {
-    let uploaderId: string | null
-    try {
-      // 1. Verifica a autenticação manualmente
-      const authHeader = request.header('Authorization')
-      if (!authHeader) {
-        return response.status(401).json({ error: 'Token de autorização ausente.' })     
-      } 
-      const token = authHeader.replace('Bearer ', '')
-      const decodedToken = await auth.verifyIdToken(token)
-      uploaderId = decodedToken.uid
-      
-      if (!uploaderId) {
-        return response.status(401).json({ error: 'Token inválido ou expirado.' })
-      }
-    } catch (err) {
-      return response.status(401).json({ error: 'Token inválido ou expirado.' })
-    }
 
     // 2. Lógica do método
     try {
@@ -39,8 +22,8 @@ export default class WorksController {
       }
 
       // 2b. Pegar os campos de texto
-      const { title, description, authorIds: authorIdsString, labelsIds: labelsIdsString, courseId } =
-        request.only(['title', 'description', 'authorIds', 'labelsIds', 'courseId'])
+      const { title, description, authorIds: authorIdsString, labelsIds: labelsIdsString, courseId, uploaderId } =
+        request.only(['title', 'description', 'authorIds', 'labelsIds', 'courseId', 'uploaderId'])
 
       // 2c. Converter campos de array (que vêm como string)
       let authorIds = []

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../Services/api';
+import Cookies from "js-cookie";
 
 // --- ESTILOS (Apenas para melhor visualização) ---
 const formStyle = { display: 'flex', flexDirection: 'column', maxWidth: '600px', margin: '20px auto' };
@@ -47,6 +48,7 @@ export default function AddWork() {
   const [selectedCourseId, setSelectedCourseId] = useState('');
   const [selectedAuthorIds, setSelectedAuthorIds] = useState([]);
   const [selectedLabelIds, setSelectedLabelIds] = useState([]);
+  const [UserID, setUserID] = useState();
 
   // --- Dados Disponíveis (vindos da API) ---
   const [availableCourses, setAvailableCourses] = useState([]);
@@ -64,6 +66,12 @@ export default function AddWork() {
 
   // 1. Buscar os dados ao carregar a página
   useEffect(() => {
+
+    // Carrega o uid
+    const uid = JSON.parse(Cookies.get("user")).uid || null
+    setUserID(uid)
+
+    // Carrega Informações
     async function loadData() {
       try {
         const [coursesRes, usersRes, labelsRes] = await Promise.all([
@@ -139,8 +147,9 @@ export default function AddWork() {
     formData.append('courseId', selectedCourseId);
     
     // Envia os arrays de IDs como JSON string
-    formData.append('authorIds', JSON.stringify(selectedAuthorIds));
+    formData.append('authorIds', JSON.stringify([selectedAuthorIds]));
     formData.append('labelsIds', JSON.stringify(selectedLabelIds));
+    formData.append('uploaderId', UserID);
 
     try {
       await api.post('/works', formData);

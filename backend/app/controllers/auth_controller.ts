@@ -56,7 +56,7 @@ export default class AuthController {
       }
 
       const userData = userDoc.data()
-      
+
       // Busca o curso (caso tenha cursoId)
       let courseData = null
       if (userData?.courseId) {
@@ -72,6 +72,7 @@ export default class AuthController {
         email: userData?.email,
         isAdmin: userData?.isAdmin,
         course: courseData,
+        uid: userRecord.uid,
       }
 
       return response.json({ token, user })
