@@ -31,7 +31,7 @@ export default function Register() {
         name: data.name,
         email: data.email,
         password: data.password,
-        courseId: data.courseId, 
+        courseRef: data.courseId, 
       });
 
       setSuccessMessage("Usuário criado com sucesso!");
