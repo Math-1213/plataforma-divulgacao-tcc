@@ -57,6 +57,7 @@ export default function UserEdit() {
             const resProfile = await API.get("/profiles/" + profileId);
             profileData = resProfile.data;
             setProfile(profileData);
+            console.log(profileData);
           }
         }
 
@@ -64,7 +65,7 @@ export default function UserEdit() {
           name: userData.name ?? "",
           courseId: userData.courseId?._path?.segments?.[1] ?? "",
           bio: profileData?.bio ?? "",
-          social: profileData?.social ?? [], // redes sociais
+          social: profileData?.redes ?? [], // redes sociais
         });
       } catch (err) {
         console.error(err);
@@ -88,14 +89,14 @@ export default function UserEdit() {
         // Se já existe, apenas atualiza
         await API.put(`/profiles/${profile.id}`, {
           bio: data.bio,
-          social: data.social,
+          redes: data.social,
         });
 
       } else {
         // Se NÃO existe, cria e obtém o ID retornado
         const res = await API.post(`/profiles`, {
           bio: data.bio,
-          social: data.social,
+          redes: data.social,
         });
 
       profileId = res.data.id;  // <- ID do novo profile
