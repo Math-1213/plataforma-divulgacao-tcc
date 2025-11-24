@@ -160,7 +160,7 @@ export default function AddWork() {
 
       setLoading(false);
       alert('Trabalho enviado com sucesso!');
-      navigate('/my-works');
+      navigate('/myworks');
     } catch (err) {
       setLoading(false);
       const errorMsg = err.response?.data?.error || err.message;

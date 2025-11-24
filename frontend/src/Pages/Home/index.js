@@ -24,7 +24,7 @@ export default function Home() {
       const sortedData = workList.data.sort((a, b) => {
         const dateA = new Date(a.creationDate)
         const dateB = new Date(b.creationDate)
-        return dateA - dateB;
+        return dateB - dateA;
       });
       setWorks(sortedData);
       console.log(sortedData);

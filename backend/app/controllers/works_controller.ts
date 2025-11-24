@@ -202,46 +202,51 @@ export default class WorksController {
    * Lista trabalhos do usuário logado (GET /my-works)
    */
   public async myWorks({ request, response }: HttpContext) {
-    let userId: string | null
-    try {
-      // 1. Verifica a autenticação manualmente
-      const authHeader = request.header('Authorization')
-      if (!authHeader) {
-        return response.status(401).json({ error: 'Token de autorização ausente.' })
-      }
-      const token = authHeader.replace('Bearer ', '')
-      const decodedToken = await auth.verifyIdToken(token)
-      userId = decodedToken.uid
+  let userId: string | null
+  
+  // OBTENDO O userId DO TOKEN (Lógica de Autenticação)
+  try {
+    const authHeader = request.header('Authorization')
+    if (!authHeader) {
+      // Se não houver token, retorna 401 imediatamente
+      return response.status(401).json({ error: 'Token de autorização ausente.' })
+    }
+    const token = authHeader.replace('Bearer ', '')
+    const decodedToken = await auth.verifyIdToken(token)
+    userId = decodedToken.uid // <--- userId FINAL É OBTIDO AQUI!
 
-      if (!userId) {
-        return response.status(401).json({ error: 'Token inválido ou expirado.' })
-      }
-    } catch (err) {
+    if (!userId) {
       return response.status(401).json({ error: 'Token inválido ou expirado.' })
     }
+  } catch (err) {
+    // Captura falhas de verificação de token (expirado, inválido, etc.)
+    return response.status(401).json({ error: 'Token inválido ou expirado.' })
+  }
 
-    // 2. Lógica do método
-    try {
-      const snapshot = await db
-        .collection('works')
-        .where('authorIds', 'array-contains', userId)
-        .orderBy('creationDate', 'desc')
-        .get()
+  // 2. Lógica do método (Agora com userId VÁLIDO e SEGURO)
+  try {
+    console.log('228')
+    const snapshot = await db
+      .collection('works')
+      .where('authorIds', 'array-contains', userId) // <-- Usa o userId obtido do token
+      .orderBy('creationDate', 'desc')
+      .get()
+      console.log('sla')
+    // Mapeamento de dados 
+    const works = await Promise.all(
+        snapshot.docs.map(async (doc) => {
+             const data = doc.data()
+             // Simplificado para retornar apenas os dados brutos se o mapeamento for muito longo
+             return { id: doc.id, ...data } 
+        })
+    )
 
-      if (snapshot.empty) {
-        return response.json([])
-      }
+    return response.json(works)
 
-      const works = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }))
-
-      return response.json(works)
-    } catch (err: any) {
-      console.error('Erro ao buscar "meus trabalhos":', err)
-      return response.status(500).json({ error: err.message })
-    }
+  } catch (err: any) {
+    console.error('Erro ao buscar "meus trabalhos":', err)
+    return response.status(500).json({ error: err.message })
+  }
   }
 
   /**
