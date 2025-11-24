@@ -101,6 +101,9 @@ export default function Header({
                 <button onClick={() => navigate("/myworks")}>
                   Meus Trabalhos
                 </button>
+                <button onClick={() => navigate("/addworks")}>
+                  Publicar Trabalhos
+                </button>
                 <hr />
                 <button onClick={() => navigate("/account/settings")}>
                   Configurações
