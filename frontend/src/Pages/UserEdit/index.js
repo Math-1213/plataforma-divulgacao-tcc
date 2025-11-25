@@ -126,147 +126,149 @@ export default function UserEdit() {
     <>
       <Header />
 
-      <div className="flex justify-center mt-10 px-4">
-        <div className="w-full max-w-2xl bg-white shadow-lg rounded-xl p-8">
+      <div className="container d-flex justify-content-center mt-5">
+        <div className="col-12 col-md-10 col-lg-8 col-xl-6 bg-white shadow p-4 rounded-4">
 
-          <h1 className="text-2xl font-bold mb-6 text-gray-800">
+          <h1 className="h4 fw-bold mb-4 text-secondary">
             ✏️ Editar Perfil
           </h1>
 
-          {successMessage && (
-            <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
-              {successMessage}
+        <form onSubmit={handleSubmit(onSubmit)}>
+
+          {/* Nome */}
+          <div className="mb-3">
+            <label className="form-label fw-semibold">Nome</label>
+            <input
+            {...register("name", { required: "O nome é obrigatório" })}
+            className={`form-control ${errors.name ? "is-invalid" : ""}`}
+            placeholder="Seu nome"
+          />
+          {errors.name && (
+            <div className="invalid-feedback">
+              {errors.name.message}
             </div>
           )}
+        </div>
 
-          {errorMessage && (
-            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-              {errorMessage}
+        {/* Curso */}
+        <div className="mb-3">
+          <label className="form-label fw-semibold">Curso</label>
+          <select
+            {...register("courseId", { required: "Selecione um curso" })}
+            className={`form-select ${errors.courseId ? "is-invalid" : ""}`}
+          >
+            <option value="">Selecione um curso</option>
+              {courses.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+            ))}
+          </select>
+
+          {errors.courseId && (
+            <div className="invalid-feedback">
+              {errors.courseId.message}
             </div>
           )}
+        </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        {/* Bio */}
+        <div className="mb-3">
+          <label className="form-label fw-semibold">Bio</label>
+          <textarea
+            {...register("bio")}
+            className="form-control"
+            rows={4}
+            placeholder="Fale um pouco sobre você..."
+          ></textarea>
+        </div>
 
-            {/* Nome */}
-            <div>
-              <label className="block mb-1 font-medium">Nome</label>
-              <input
-                {...register("name", { required: "O nome é obrigatório" })}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 ${
-                  errors.name
-                    ? "border-red-500 focus:ring-red-300"
-                    : "border-gray-300 focus:ring-blue-300"
-                }`}
-                placeholder="Seu nome"
-              />
-              {errors.name && (
-                <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
-              )}
-            </div>
+        {/* Redes sociais */}
+        <div className="mt-4">
+          <label className="form-label fw-bold text-secondary">Redes sociais</label>
 
-            {/* Curso */}
-            <div>
-              <label className="block mb-1 font-medium">Curso</label>
-              <select
-                {...register("courseId", { required: "Selecione um curso" })}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 ${
-                  errors.courseId
-                    ? "border-red-500 focus:ring-red-300"
-                    : "border-gray-300 focus:ring-blue-300"
-                }`}
-              >
-                <option value="">Selecione um curso</option>
-                {courses.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-              {errors.courseId && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.courseId.message}
-                </p>
-              )}
-            </div>
+          {fields.length === 0 && (
+            <p className="text-muted small">Nenhuma rede social adicionada.</p>
+          )}
 
-            {/* Bio */}
-            <div>
-              <label className="block mb-1 font-medium">Bio</label>
-              <textarea
-                {...register("bio")}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-300"
-                rows={4}
-                placeholder="Fale um pouco sobre você..."
-              ></textarea>
-            </div>
+          {fields.map((field, index) => (
+            <div key={field.id} className="border rounded p-3 mb-3 bg-light">
 
-            {/* Redes Sociais */}
-            <div className="mt-6">
-              <label className="block mb-2 font-semibold text-gray-700">
-                Redes sociais
-              </label>
+              <div className="row g-3 align-items-end">
 
-              {fields.length === 0 && (
-                <p className="text-sm text-gray-500 mb-3">
-                  Nenhuma rede social adicionada.
-                </p>
-              )}
+                {/* Tipo */}
+                <div className="col-md-4">
+                  <label className="form-label">Tipo</label>
+                  <input
+                    {...register(`social.${index}.type`, {
+                    required: "Informe o tipo",
+                    })}
+                    className="form-control"
+                    placeholder="GitHub"
+                  />
+                </div>
 
-              <div className="space-y-4">
-                {fields.map((field, index) => (
-                  <div
-                    key={field.id}
-                    className="flex flex-col md:flex-row gap-3 items-start bg-gray-50 p-4 rounded-lg border"
+                {/* URL */}
+                <div className="col-md-6">
+                  <label className="form-label">URL</label>
+                  <input
+                    {...register(`social.${index}.url`, {
+                      required: "Informe a URL",
+                    })}
+                    className="form-control"
+                    placeholder="https://..."
+                  />
+                </div>
+
+                {/* Remover */}
+                <div className="col-md-2 text-end">
+                  <button
+                    type="button"
+                    className="btn btn-outline-danger w-100"
+                    onClick={() => remove(index)}
                   >
-                    {/* Tipo */}
-                    <input
-                      {...register(`social.${index}.type`, {
-                        required: "Informe o tipo",
-                      })}
-                      placeholder="Tipo (ex: GitHub)"
-                      className="w-full px-3 py-2 border rounded-lg"
-                    />
-
-                    {/* URL */}
-                    <input
-                      {...register(`social.${index}.url`, {
-                        required: "Informe a URL",
-                      })}
-                      placeholder="URL"
-                      className="w-full px-3 py-2 border rounded-lg"
-                    />
-
-                    {/* Remover */}
-                    <button
-                      type="button"
-                      className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
-                      onClick={() => remove(index)}
-                    >
-                      Remover
-                    </button>
-                  </div>
-                ))}
+                    Remover
+                  </button>
+                </div>
               </div>
 
-              <button
-                type="button"
-                className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                onClick={() => append({ type: "", url: "" })}
-              >
-                + Adicionar rede social
-              </button>
             </div>
+          ))}
 
-            {/* Botão */}
-            <button
-              type="submit"
-              className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition"
-            >
-              Salvar alterações
-            </button>
-          </form>
+          {/* Botão adicionar */}
+          <button
+            type="button"
+            className="btn btn-primary mt-2"
+            onClick={() => append({ type: "", url: "" })}
+          >
+            + Adicionar rede social
+          </button>
         </div>
-      </div>
+        
+        
+          {/* Sucesso */}
+          {successMessage && (
+            <div className="alert alert-success">{successMessage}</div>
+          )}
+
+          {/* Erro */}
+          {errorMessage && (
+            <div className="alert alert-danger">{errorMessage}</div>
+          )}
+        
+
+        {/* Botão submit */}
+        <button
+          type="submit"
+          className="btn btn-success w-100 mt-4 py-2 fw-semibold"
+        >
+          Salvar alterações
+        </button>
+
+      </form>
+    </div>
+  </div>
+
     </>
   );
 }
