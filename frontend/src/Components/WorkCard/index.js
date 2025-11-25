@@ -9,16 +9,34 @@ import {
   NoLabels,
 } from "./styles";
 
-export default function WorkCard({ title, author, date, labels, description }) {
-  function getAuthors() {
-    if (!author || author.length === 0) return "Autor desconhecido";
+export default function WorkCard({ title, author, date, tags, description }) {
+  function formatAuthors() {
+    if (!author) return "Autor desconhecido";
+
     if (Array.isArray(author)) {
-      return author.map((a) => a.name).join(", ");
+      // Array de objetos [{ name }]
+      if (author.length === 0) return "Autor desconhecido";
+      return author.map((a) => a?.name || "Sem nome").join(", ");
     }
-    if (typeof author === "object" && author.name) {
-      return author.name;
-    }
+
+    if (typeof author === "object") return author.name || "Autor desconhecido";
+
+    // string simples
     return author;
+  }
+
+  function formatDate() {
+    try {
+      return new Date(date).toLocaleDateString("pt-BR");
+    } catch {
+      return "Data indefinida";
+    }
+  }
+
+  function shortDescription() {
+    if (!description) return "Sem descrição disponível.";
+    if (description.length <= 180) return description;
+    return description.substring(0, 180) + "...";
   }
 
   return (
@@ -29,20 +47,20 @@ export default function WorkCard({ title, author, date, labels, description }) {
 
         {/* Autor e Data */}
         <CardSubtitle className="card-subtitle text-muted mb-3">
-          {getAuthors()} • {new Date(date).toLocaleDateString("pt-BR")}
+          {formatAuthors()} • {formatDate()}
         </CardSubtitle>
 
-        {/* Labels */}
+        {/* Tags */}
         <div className="mb-3">
-          {labels && labels.length > 0 ? (
-            labels.map((label, i) => <Label key={i}>{label}</Label>)
+          {tags && tags.length > 0 ? (
+            tags.map((tag, i) => <Label key={i}>{tag}</Label>)
           ) : (
-            <NoLabels>Sem temas definidos</NoLabels>
+            <NoLabels>Nenhuma tag</NoLabels>
           )}
         </div>
 
         {/* Descrição */}
-        <Description className="card-text">{description}</Description>
+        <Description className="card-text">{shortDescription()}</Description>
       </div>
     </Card>
   );
@@ -52,9 +70,16 @@ WorkCard.propTypes = {
   title: PropTypes.string.isRequired,
   author: PropTypes.oneOfType([
     PropTypes.string,
-    PropTypes.arrayOf(PropTypes.string),
-  ]).isRequired,
-  date: PropTypes.string.isRequired,
-  labels: PropTypes.arrayOf(PropTypes.string),
-  description: PropTypes.string.isRequired,
+    PropTypes.arrayOf(
+      PropTypes.shape({
+        name: PropTypes.string,
+      })
+    ),
+    PropTypes.shape({
+      name: PropTypes.string,
+    }),
+  ]),
+  date: PropTypes.string,
+  tags: PropTypes.arrayOf(PropTypes.string),
+  description: PropTypes.string,
 };

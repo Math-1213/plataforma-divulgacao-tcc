@@ -2,7 +2,6 @@ import axios from "axios";
 import Cookies from "js-cookie";
 
 const API_URL = process.env.REACT_APP_LOCAL_URL;
-console.log(API_URL);
 const API = axios.create({
   baseURL: API_URL,
   headers: {

@@ -1,46 +1,35 @@
 import type { HttpContext } from '@adonisjs/core/http'
-import { db, auth, storage } from '../../config/firebase.js'
-import { v4 as uuidv4 } from 'uuid' // Para nomes de arquivo únicos
+import { db, auth } from '../../config/firebase.js'
 
 export default class WorksController {
   /**
    * Cria um novo trabalho com upload de arquivo (POST /works)
    */
   public async store({ request, response }: HttpContext) {
-    let uploaderId: string | null
-    try {
-      // 1. Verifica a autenticação manualmente
-      const authHeader = request.header('Authorization')
-      if (!authHeader) {
-        return response.status(401).json({ error: 'Token de autorização ausente.' })
-      }
-      const token = authHeader.replace('Bearer ', '')
-      const decodedToken = await auth.verifyIdToken(token)
-      uploaderId = decodedToken.uid
-
-      if (!uploaderId) {
-        return response.status(401).json({ error: 'Token inválido ou expirado.' })
-      }
-    } catch (err) {
-      return response.status(401).json({ error: 'Token inválido ou expirado.' })
-    }
-
     // 2. Lógica do método
     try {
       // 2a. Pegar o arquivo
+      console.log(request.body())
       const workFile = request.file('work_file', {
         size: '10mb', // Limite de 10MB
         // Defina os tipos de arquivo que você aceita
-        extnames: ['pdf', 'doc', 'docx', 'zip', 'png', 'jpg'],
+        extnames: ['pdf', 'doc', 'docx', 'zip', 'png', 'jpg', 'txt'],
       })
+      console.log('Workfile: ', workFile)
 
       if (!workFile) {
         return response.status(400).json({ error: 'Nenhum arquivo enviado.' })
       }
 
       // 2b. Pegar os campos de texto
-      const { title, description, authorIds: authorIdsString, labelsIds: labelsIdsString, courseId } =
-        request.only(['title', 'description', 'authorIds', 'labelsIds', 'courseId'])
+      const {
+        title,
+        description,
+        authorIds: authorIdsString,
+        labelsIds: labelsIdsString,
+        courseId,
+        uploaderId,
+      } = request.only(['title', 'description', 'authorIds', 'labelsIds', 'courseId', 'uploaderId'])
 
       // 2c. Converter campos de array (que vêm como string)
       let authorIds = []
@@ -48,6 +37,7 @@ export default class WorksController {
       try {
         authorIds = authorIdsString ? JSON.parse(authorIdsString) : []
         labelsIds = labelsIdsString ? JSON.parse(labelsIdsString) : []
+        authorIds.push(uploaderId)
       } catch (e) {
         return response.status(400).json({ error: 'Formato inválido para authorIds ou labelsIds.' })
       }
@@ -58,18 +48,18 @@ export default class WorksController {
         })
       }
 
-      // 3. Fazer o upload para o Firebase Storage
-      const bucket = storage.bucket() // Pega o bucket padrão
-      const fileName = `works/${uploaderId}/${uuidv4()}-${workFile.clientName}`
-      
+      // 3. Fazer o upload para o Bucket
+      // const bucket = storage.bucket() // Pega o bucket padrão
+      // const fileName = `works/${uploaderId}/${uuidv4()}-${workFile.clientName}`
+
       // Faz o upload a partir do caminho temporário que o Adonis criou
-      await bucket.upload(workFile.tmpPath!, {
-        destination: fileName,
-        public: true, // Torna o arquivo publicamente legível
-      })
+      // await bucket.upload(workFile.tmpPath!, {
+      //   destination: fileName,
+      //   public: true, // Torna o arquivo publicamente legível
+      // })
 
       // 4. Obter a URL pública de download
-      const fileURL = `https://storage.googleapis.com/${bucket.name}/${fileName}`
+      // const fileURL = `https://storage.googleapis.com/${bucket.name}/${fileName}`
 
       // 5. Salvar metadados no Firestore
       const finalAuthorIds = [...new Set([...authorIds, uploaderId])]
@@ -83,9 +73,9 @@ export default class WorksController {
         courseId: courseId || null,
         uploaderId: uploaderId,
         creationDate: new Date(),
-        
+
         // --- Novos campos do arquivo ---
-        fileURL: fileURL,
+        // fileURL: fileURL,
         fileName: workFile.clientName,
         fileSize: workFile.size,
         fileType: workFile.extname,
@@ -129,15 +119,77 @@ export default class WorksController {
       }
 
       const snapshot = await query.orderBy('creationDate', 'desc').get()
+      if (snapshot.empty) return response.json([])
 
-      if (snapshot.empty) {
-        return response.json([])
-      }
+      const works = await Promise.all(
+        snapshot.docs.map(async (doc) => {
+          const data = doc.data()
 
-      const works = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }))
+          // ---------- CONVERTE DATA ----------
+          let creationDate = null
+          if (data.creationDate?.seconds) {
+            creationDate = new Date(data.creationDate.seconds * 1000).toISOString()
+          }
+
+          // ---------- RESOLVE AUTORES ----------
+          let authors: any[] = []
+
+          if (Array.isArray(data.authorIds)) {
+            authors = await Promise.all(
+              data.authorIds.map(async (a) => {
+                // Caso venha como ID (string)
+                if (typeof a === 'string') {
+                  const ref = db.collection('users').doc(a)
+                  const snap = await ref.get()
+                  return { id: a, ...snap.data() }
+                }
+
+                // Caso venha como DocumentReference
+                if (a.get) {
+                  const snap = await a.get()
+                  return { id: snap.id, ...snap.data() }
+                }
+
+                return null
+              })
+            )
+          }
+
+          // ---------- RESOLVE CURSO ----------
+          let course = null
+
+          if (data.courseId) {
+            if (typeof data.courseId === 'string') {
+              // veio como string
+              const ref = db.collection('courses').doc(data.courseId)
+              const snap = await ref.get()
+              if (snap.exists) {
+                course = { id: snap.id, ...snap.data() }
+              }
+            } else if (data.courseId.get) {
+              // veio como DocumentReference
+              const snap = await data.courseId.get()
+              if (snap.exists) {
+                course = { id: snap.id, ...snap.data() }
+              }
+            }
+          }
+
+          return {
+            id: doc.id,
+            title: data.title,
+            description: data.description,
+            creationDate,
+            authors,
+            course,
+            labels: data.labelsIds ?? [],
+            uploaderId: data.uploaderId ?? null,
+            fileName: data.fileName ?? null,
+            fileSize: data.fileSize ?? null,
+            fileType: data.fileType ?? null,
+          }
+        })
+      )
 
       return response.json(works)
     } catch (err: any) {
@@ -150,47 +202,49 @@ export default class WorksController {
    * Lista trabalhos do usuário logado (GET /my-works)
    */
   public async myWorks({ request, response }: HttpContext) {
-    let userId: string | null
-    try {
-      // 1. Verifica a autenticação manualmente
-      const authHeader = request.header('Authorization')
-      if (!authHeader) {
-        return response.status(401).json({ error: 'Token de autorização ausente.' })
-      }
-      const token = authHeader.replace('Bearer ', '')
-      const decodedToken = await auth.verifyIdToken(token)
-      userId = decodedToken.uid
+  let userId: string | null
+  
+  // OBTENDO O userId DO TOKEN (Lógica de Autenticação)
+  try {
+    const authHeader = request.header('Authorization')
+    if (!authHeader) {
+      // Se não houver token, retorna 401 imediatamente
+      return response.status(401).json({ error: 'Token de autorização ausente.' })
+    }
+    const token = authHeader.replace('Bearer ', '')
+    const decodedToken = await auth.verifyIdToken(token)
+    userId = decodedToken.uid // <--- userId FINAL É OBTIDO AQUI!
 
-      if (!userId) {
-         return response.status(401).json({ error: 'Token inválido ou expirado.' })
-      }
-
-    } catch (err) {
+    if (!userId) {
       return response.status(401).json({ error: 'Token inválido ou expirado.' })
     }
+  } catch (err) {
+    // Captura falhas de verificação de token (expirado, inválido, etc.)
+    return response.status(401).json({ error: 'Token inválido ou expirado.' })
+  }
 
-    // 2. Lógica do método
-    try {
-      const snapshot = await db
-        .collection('works')
-        .where('authorIds', 'array-contains', userId)
-        .orderBy('creationDate', 'desc')
-        .get()
+  // 2. Lógica do método (Agora com userId VÁLIDO e SEGURO)
+  try {
+    const snapshot = await db
+      .collection('works')
+      .where('authorIds', 'array-contains', userId) // <-- Usa o userId obtido do token
+      .orderBy('creationDate', 'desc')
+      .get()
+    // Mapeamento de dados 
+    const works = await Promise.all(
+        snapshot.docs.map(async (doc) => {
+             const data = doc.data()
+             // Simplificado para retornar apenas os dados brutos se o mapeamento for muito longo
+             return { id: doc.id, ...data } 
+        })
+    )
 
-      if (snapshot.empty) {
-        return response.json([])
-      }
+    return response.json(works)
 
-      const works = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }))
-
-      return response.json(works)
-    } catch (err: any) {
-      console.error('Erro ao buscar "meus trabalhos":', err)
-      return response.status(500).json({ error: err.message })
-    }
+  } catch (err: any) {
+    console.error('Erro ao buscar "meus trabalhos":', err)
+    return response.status(500).json({ error: err.message })
+  }
   }
 
   /**
@@ -230,9 +284,8 @@ export default class WorksController {
       userId = decodedToken.uid
 
       if (!userId) {
-         return response.status(401).json({ error: 'Token inválido ou expirado.' })
+        return response.status(401).json({ error: 'Token inválido ou expirado.' })
       }
-      
     } catch (err) {
       return response.status(401).json({ error: 'Token inválido ou expirado.' })
     }
@@ -240,11 +293,7 @@ export default class WorksController {
     // 2. Lógica do método
     try {
       const { id } = params
-      const { title, description, labelsIds } = request.only([
-        'title',
-        'description',
-        'labelsIds',
-      ])
+      const { title, description, labelsIds } = request.only(['title', 'description', 'labelsIds'])
 
       const docRef = db.collection('works').doc(id)
       const doc = await docRef.get()
@@ -287,11 +336,10 @@ export default class WorksController {
       const token = authHeader.replace('Bearer ', '')
       const decodedToken = await auth.verifyIdToken(token)
       userId = decodedToken.uid
-      
-      if (!userId) {
-         return response.status(401).json({ error: 'Token inválido ou expirado.' })
-      }
 
+      if (!userId) {
+        return response.status(401).json({ error: 'Token inválido ou expirado.' })
+      }
     } catch (err) {
       return response.status(401).json({ error: 'Token inválido ou expirado.' })
     }

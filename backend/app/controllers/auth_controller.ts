@@ -1,5 +1,6 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { auth, db } from '../../config/firebase.js'
+import axios from 'axios'
 
 export default class AuthController {
   public async signup({ request, response }: HttpContext) {
@@ -45,22 +46,28 @@ export default class AuthController {
   }
 
   public async login({ request, response }: HttpContext) {
+    const { email, password } = request.only(['email', 'password'])
+
     try {
-      const { email } = request.only(['email', 'password'])
-      const userRecord = await auth.getUserByEmail(email)
+      const loginReq = await axios.post(
+        `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${process.env.FIREBASE_API_KEY}`,
+        {
+          email,
+          password,
+          returnSecureToken: true,
+        }
+      )
 
-      // Gera token de login
-      const token = await auth.createCustomToken(userRecord.uid)
+      const { localId: uid } = loginReq.data
 
-      // Busca dados do usuário no Firestore
-      const userDoc = await db.collection('users').doc(userRecord.uid).get()
+      const userDoc = await db.collection('users').doc(uid).get()
+
       if (!userDoc.exists) {
         return response.status(404).json({ error: 'Usuário não encontrado' })
       }
 
       const userData = userDoc.data()
-      
-      // Busca o curso (caso tenha cursoId)
+
       let courseData = null
       if (userData?.courseId) {
         const courseDoc = await userData.courseId.get()
@@ -69,19 +76,25 @@ export default class AuthController {
         }
       }
 
-      // Monta o retorno
       const user = {
         id: userDoc.id,
         name: userData?.name,
         email: userData?.email,
         isAdmin: userData?.isAdmin,
         course: courseData,
+        uid,
       }
 
-      return response.json({ token, user })
-    } catch (err: any) {
-      console.error(err)
-      return response.status(400).json({ error: err.message })
+      return response.json({
+        token: loginReq.data.idToken,
+        user,
+      })
+    } catch (error: any) {
+      console.error(error.response?.data || error.message)
+
+      return response.status(401).json({
+        error: 'Email ou senha inválidos',
+      })
     }
   }
 }
