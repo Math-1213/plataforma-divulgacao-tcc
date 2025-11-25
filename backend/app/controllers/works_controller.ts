@@ -225,13 +225,11 @@ export default class WorksController {
 
   // 2. Lógica do método (Agora com userId VÁLIDO e SEGURO)
   try {
-    console.log('228')
     const snapshot = await db
       .collection('works')
       .where('authorIds', 'array-contains', userId) // <-- Usa o userId obtido do token
       .orderBy('creationDate', 'desc')
       .get()
-      console.log('sla')
     // Mapeamento de dados 
     const works = await Promise.all(
         snapshot.docs.map(async (doc) => {
