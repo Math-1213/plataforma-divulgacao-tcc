@@ -17,25 +17,6 @@ export default function Home() {
     console.log("Buscando por:", term);
   };
 
-  // const works = [
-  //   {
-  //     title: "Análise de Dados em Ambientes de IoT",
-  //     author: "Matheus Silva",
-  //     date: "22/10/2025",
-  //     labels: ["IoT", "Big Data", "Engenharia de Computação"],
-  //     description:
-  //       "Este trabalho explora a coleta e análise de dados em sistemas IoT utilizando técnicas de aprendizado de máquina para otimização de energia.",
-  //   },
-  //   {
-  //     title: "Blockchain e Segurança de Informação",
-  //     author: "Dante Costa",
-  //     date: "18/10/2025",
-  //     labels: ["Blockchain", "Criptografia"],
-  //     description:
-  //       "Um estudo sobre o uso de blockchain para aumentar a segurança em redes corporativas e armazenamento de dados sensíveis.",
-  //   },
-  // ];
-
   // GET WORKS
   useEffect(() => {
     async function loadWorks() {
@@ -43,7 +24,7 @@ export default function Home() {
       const sortedData = workList.data.sort((a, b) => {
         const dateA = new Date(a.creationDate)
         const dateB = new Date(b.creationDate)
-        return dateA - dateB;
+        return dateB - dateA;
       });
       setWorks(sortedData);
       console.log(sortedData);

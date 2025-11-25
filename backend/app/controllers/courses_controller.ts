@@ -10,7 +10,7 @@ import { db } from '../../config/firebase.js'
  */
 export default class CoursesController {
   private collection = db.collection('courses')
-
+  
   /**
    * GET /courses
    * Lista todos os cursos

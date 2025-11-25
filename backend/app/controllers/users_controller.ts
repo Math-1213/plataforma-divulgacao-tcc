@@ -91,7 +91,14 @@ export default class UsersController {
    */
   public async update({ params, request, response }: HttpContext) {
     try {
-      const updates = request.only(['nome', 'email', 'perfilId', 'cursoId', 'trabalhos', 'isAdmin'])
+      const updates = request.only(['name', 'email', 'profileId', 'courseId', 'workIds', 'isAdmin'])
+
+      const courseId = db.collection('courses').doc(updates.courseId)
+      updates.courseId = courseId
+
+      const profileId = db.collection('profiles').doc(updates.profileId)
+      updates.profileId = profileId
+
 
       const docRef = this.collection.doc(params.id)
       const doc = await docRef.get()
