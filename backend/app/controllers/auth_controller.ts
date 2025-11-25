@@ -4,11 +4,11 @@ import { auth, db } from '../../config/firebase.js'
 export default class AuthController {
   public async signup({ request, response }: HttpContext) {
     try {
-      const { email, password, name, courseId } = request.only([
+      const { email, password, name, courseRef } = request.only([
         'email',
         'password',
         'name',
-        'courseId',
+        'courseRef',
       ])
 
       // Verifica se é email válido da instituição
@@ -23,6 +23,9 @@ export default class AuthController {
         password,
         displayName: name,
       })
+
+      // Gera referência de curso
+       const courseId = db.collection('courses').doc(courseRef)
 
       // Cria usuário no Firestore
       await db.collection('users').doc(userRecord.uid).set({
@@ -68,6 +71,7 @@ export default class AuthController {
 
       // Monta o retorno
       const user = {
+        id: userDoc.id,
         name: userData?.name,
         email: userData?.email,
         isAdmin: userData?.isAdmin,

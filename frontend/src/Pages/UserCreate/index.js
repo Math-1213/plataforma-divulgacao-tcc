@@ -20,7 +20,7 @@ export default function Register() {
   const [courses, setCourses] = useState([]);
 
   useEffect(() => {
-    API.get("/courses/list")
+    API.get("/courses")
       .then(res => setCourses(res.data))
       .catch(err => console.error(err));
   }, []);
@@ -31,7 +31,7 @@ export default function Register() {
         name: data.name,
         email: data.email,
         password: data.password,
-        courseId: data.courseId, 
+        courseRef: data.courseId, 
       });
 
       setSuccessMessage("Usuário criado com sucesso!");
