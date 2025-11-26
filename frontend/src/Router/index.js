@@ -6,6 +6,7 @@ import WorkInfo from "../Pages/WorkInfo";
 import AddWork from "../Pages/AddWork";
 import Register from "../Pages/UserCreate";
 import UserPage from "../Pages/UserEdit";
+import AdminPage from "../Pages/Admin";
 
 import PrivateRoute from "./Private";
 
@@ -52,6 +53,15 @@ export default function Router() {
           element={
             <PrivateRoute>
               <WorkInfo />
+            </PrivateRoute>
+          }
+        />
+        
+        <Route
+          path="/admin"
+          element={
+            <PrivateRoute>
+              <AdminPage />
             </PrivateRoute>
           }
         />
