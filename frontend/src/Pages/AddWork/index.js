@@ -72,6 +72,9 @@ export default function AddWork() {
     const uid = JSON.parse(Cookies.get("user")).uid || null
     setUserID(uid)
 
+    const courseId = JSON.parse(Cookies.get("user")).course.id || null
+    setSelectedCourseId(courseId) 
+    
     // Carrega Informações
     async function loadData() {
       try {
@@ -151,7 +154,7 @@ export default function AddWork() {
     formData.append('authorIds', JSON.stringify(selectedAuthorIds));
     formData.append('labelsIds', JSON.stringify(selectedLabelIds));
     formData.append('uploaderId', UserID);
-
+    
     try {
       await api.post("/works", formData, {
         headers: {
@@ -193,7 +196,7 @@ export default function AddWork() {
         <textarea style={{ ...inputStyle, minHeight: '80px' }} value={description} onChange={(e) => setDescription(e.target.value)} />
 
         {/* CURSO (DROPDOWN) */}
-        <label style={labelStyle}>Curso (Obrigatório):</label>
+        {/* <label style={labelStyle}>Curso (Obrigatório):</label>
         <select
           style={inputStyle}
           value={selectedCourseId}
@@ -206,7 +209,7 @@ export default function AddWork() {
               {course.name}
             </option>
           ))}
-        </select>
+        </select> */}
 
         {/* --- AUTORES (SEARCHABLE MULTI-SELECT) --- */}
         <label style={labelStyle}>Co-Autores (Nome ou Email):</label>
@@ -251,7 +254,7 @@ export default function AddWork() {
         </div>
 
         {/* --- LABELS (SEARCHABLE MULTI-SELECT) --- */}
-        <label style={labelStyle}>Tags / Labels:</label>
+        {/* <label style={labelStyle}>Tags / Labels:</label>
         <div style={{ position: 'relative' }}>
           <input
             style={inputStyle}
@@ -273,10 +276,10 @@ export default function AddWork() {
               ))}
             </div>
           )}
-        </div>
+        </div> */}
 
         {/* Chips de Labels Selecionadas */}
-        <div style={selectedContainerStyle}>
+        {/* <div style={selectedContainerStyle}>
           {getSelectedItems(selectedLabelIds, availableLabels).map(label => (
             <span key={label.id} style={selectedItemStyle}>
               {label.name}
@@ -290,7 +293,7 @@ export default function AddWork() {
             </span>
           ))}
           {selectedLabelIds.length === 0 && <span style={{ color: '#999' }}>Nenhuma tag selecionada.</span>}
-        </div>
+        </div> */}
 
         {/* ARQUIVO */}
         <label style={labelStyle}>Arquivo (Obrigatório):</label>
