@@ -22,8 +22,8 @@ export default function Home() {
     async function loadWorks() {
       const workList = await API.get("/works");
       const sortedData = workList.data.sort((a, b) => {
-        const dateA = new Date(a.creationDate)
-        const dateB = new Date(b.creationDate)
+        const dateA = new Date(a.creationDate);
+        const dateB = new Date(b.creationDate);
         return dateB - dateA;
       });
       setWorks(sortedData);
@@ -46,6 +46,42 @@ export default function Home() {
       window.removeEventListener("resize", calculateColumns);
     };
   }, []);
+
+  async function downloadWork(t) {
+    try {
+      if (!t.fileURL) {
+        console.warn("Nenhum arquivo associado a este trabalho.");
+        return;
+      }
+
+      const endpoint = t.fileURL.startsWith("/uploads")
+        ? t.fileURL
+        : `/download/${t.id}`; // opcional (caso queira rota dedicada)
+
+      const response = await API.get(endpoint, {
+        responseType: "blob", // necessário para baixar arquivo
+      });
+
+      if (!response || !response.data) {
+        console.warn("Não foi possível baixar o arquivo.");
+        return;
+      }
+
+      // Criar um blob para forçar o download
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = t.fileName || "download";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.warn("Erro ao baixar arquivo:", error);
+    }
+  }
 
   return (
     <>
@@ -82,6 +118,7 @@ export default function Home() {
                   date={new Date(t.creationDate)}
                   labels={t.labels}
                   description={t.description}
+                  action={() => downloadWork(t)}
                 />
               </Col>
             ))

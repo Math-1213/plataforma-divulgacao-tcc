@@ -5,6 +5,7 @@ import WorksController from '#controllers/works_controller'
 import CoursesController from '#controllers/courses_controller'
 import LabelsController from '#controllers/labels_controller'
 import AuthController from '#controllers/auth_controller'
+import app from '@adonisjs/core/services/app'
 
 // Default - Test
 router.get('/', async () => {
@@ -21,5 +22,8 @@ router.resource('labels', '#controllers/labels_controller').apiOnly()
 // Auth
 router.post('/auth/signup', [AuthController, 'signup'])
 router.post('/auth/login', [AuthController, 'login'])
-router.get('/courses/list',[CoursesController, 'listCourses'])
 router.get('/my-works', [WorksController, 'myWorks'])
+router.get('/uploads/works/:filename', async ({ params, response }) => {
+  const filePath = app.tmpPath(`uploads/works/${params.filename}`)
+  return response.download(filePath)
+})

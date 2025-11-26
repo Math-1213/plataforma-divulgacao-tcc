@@ -9,7 +9,7 @@ import {
   NoLabels,
 } from "./styles";
 
-export default function WorkCard({ title, author, date, tags, description }) {
+export default function WorkCard({ title, author, date, tags, description, action }) {
   function formatAuthors() {
     if (!author) return "Autor desconhecido";
 
@@ -40,7 +40,7 @@ export default function WorkCard({ title, author, date, tags, description }) {
   }
 
   return (
-    <Card className="shadow-sm mb-4">
+    <Card className="shadow-sm mb-4" onClick={action}>
       <div className="card-body">
         {/* Título */}
         <CardTitle className="card-title mb-2">{title}</CardTitle>
@@ -51,13 +51,13 @@ export default function WorkCard({ title, author, date, tags, description }) {
         </CardSubtitle>
 
         {/* Tags */}
-        <div className="mb-3">
+        {/* <div className="mb-3">
           {tags && tags.length > 0 ? (
             tags.map((tag, i) => <Label key={i}>{tag}</Label>)
           ) : (
             <NoLabels>Nenhuma tag</NoLabels>
           )}
-        </div>
+        </div> */}
 
         {/* Descrição */}
         <Description className="card-text">{shortDescription()}</Description>
