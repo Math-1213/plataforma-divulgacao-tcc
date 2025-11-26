@@ -70,6 +70,48 @@ O site abrirá em:
 > http://localhost:3000
 
 ---
+
+## Executando com Docker 🐳
+
+### O que é Docker?
+
+Docker é uma plataforma de containerização que permite empacotar sua aplicação e todas as suas dependências em containers isolados. Isso garante que a aplicação funcione da mesma forma em qualquer ambiente (desenvolvimento, produção, etc.).
+
+**Principais benefícios:**
+- ✅ Isolamento completo do ambiente
+- ✅ Portabilidade entre diferentes sistemas
+- ✅ Facilita o trabalho em equipe (mesmo ambiente para todos)
+- ✅ Simplifica o deploy em produção
+
+### Pré-requisitos
+
+Instale o [Docker Desktop](https://www.docker.com/products/docker-desktop) no seu sistema.
+
+### Executando com Docker
+
+1. **Na raiz do projeto, execute:**
+   ```bash
+   docker-compose up --build
+   ```
+
+2. **Acesse a aplicação:**
+   - Frontend: http://localhost:3000
+   - Backend: http://localhost:3333
+
+3. **Para parar os containers:**
+   ```bash
+   docker-compose down
+   ```
+
+4. **Para ver os logs:**
+   ```bash
+   docker-compose logs -f
+   ```
+
+**📖 Para mais detalhes sobre Docker, consulte o arquivo [DOCKER.md](./DOCKER.md)**
+
+---
+
 ### Configurando o Firebase
 
 **Acesse Firebase Console**
