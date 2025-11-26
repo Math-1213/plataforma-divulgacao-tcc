@@ -45,6 +45,9 @@ export default function AddWork() {
     const uid = JSON.parse(Cookies.get("user")).uid || null;
     setUserID(uid);
 
+    const courseId = JSON.parse(Cookies.get("user")).course.id || null
+    setSelectedCourseId(courseId) 
+    
     // Carrega Informações
     async function loadData() {
       try {
@@ -183,21 +186,21 @@ export default function AddWork() {
             onChange={(e) => setDescription(e.target.value)}
           />
 
-          {/* CURSO (DROPDOWN) */}
-          <label style={labelStyle}>Curso (Obrigatório):</label>
-          <select
-            style={inputStyle}
-            value={selectedCourseId}
-            onChange={(e) => setSelectedCourseId(e.target.value)}
-            required
-          >
-            <option value="">Selecione um curso...</option>
-            {availableCourses.map((course) => (
-              <option key={course.id} value={course.id}>
-                {course.name}
-              </option>
-            ))}
-          </select>
+        {/* CURSO (DROPDOWN) */}
+        {/* <label style={labelStyle}>Curso (Obrigatório):</label>
+        <select
+          style={inputStyle}
+          value={selectedCourseId}
+          onChange={(e) => setSelectedCourseId(e.target.value)}
+          required
+        >
+          <option value="">Selecione um curso...</option>
+          {availableCourses.map(course => (
+            <option key={course.id} value={course.id}>
+              {course.name}
+            </option>
+          ))}
+        </select> */}
 
           {/* --- AUTORES (SEARCHABLE MULTI-SELECT) --- */}
           <label style={labelStyle}>Co-Autores (Nome ou Email):</label>
@@ -261,59 +264,47 @@ export default function AddWork() {
             )}
           </div>
 
-          {/* --- LABELS (SEARCHABLE MULTI-SELECT) --- */}
-          <label style={labelStyle}>Tags / Labels:</label>
-          <div style={{ position: "relative" }}>
-            <input
-              style={inputStyle}
-              type="text"
-              placeholder="Digite para buscar e selecionar tags..."
-              value={labelSearchTerm}
-              onChange={(e) => setLabelSearchTerm(e.target.value)}
-            />
-            {filteredLabels.length > 0 && (
-              <div style={resultListStyle}>
-                {filteredLabels.slice(0, 5).map((label) => (
-                  <div
-                    key={label.id}
-                    style={resultItemStyle}
-                    onClick={() =>
-                      addItem(label.id, setSelectedLabelIds, setLabelSearchTerm)
-                    }
-                  >
-                    {label.name}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Chips de Labels Selecionadas */}
-          <div style={selectedContainerStyle}>
-            {getSelectedItems(selectedLabelIds, availableLabels).map(
-              (label) => (
-                <span key={label.id} style={selectedItemStyle}>
+        {/* --- LABELS (SEARCHABLE MULTI-SELECT) --- */}
+        {/* <label style={labelStyle}>Tags / Labels:</label>
+        <div style={{ position: 'relative' }}>
+          <input
+            style={inputStyle}
+            type="text"
+            placeholder="Digite para buscar e selecionar tags..."
+            value={labelSearchTerm}
+            onChange={(e) => setLabelSearchTerm(e.target.value)}
+          />
+          {filteredLabels.length > 0 && (
+            <div style={resultListStyle}>
+              {filteredLabels.slice(0, 5).map(label => (
+                <div
+                  key={label.id}
+                  style={resultItemStyle}
+                  onClick={() => addItem(label.id, setSelectedLabelIds, setLabelSearchTerm)}
+                >
                   {label.name}
-                  <button
-                    type="button"
-                    onClick={() => removeItem(label.id, setSelectedLabelIds)}
-                    style={{
-                      marginLeft: "5px",
-                      border: "none",
-                      background: "transparent",
-                      cursor: "pointer",
-                      color: "#888",
-                    }}
-                  >
-                    &times;
-                  </button>
-                </span>
-              )
-            )}
-            {selectedLabelIds.length === 0 && (
-              <span style={{ color: "#999" }}>Nenhuma tag selecionada.</span>
-            )}
-          </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div> */}
+
+        {/* Chips de Labels Selecionadas */}
+        {/* <div style={selectedContainerStyle}>
+          {getSelectedItems(selectedLabelIds, availableLabels).map(label => (
+            <span key={label.id} style={selectedItemStyle}>
+              {label.name}
+              <button
+                type="button"
+                onClick={() => removeItem(label.id, setSelectedLabelIds)}
+                style={{ marginLeft: '5px', border: 'none', background: 'transparent', cursor: 'pointer', color: '#888' }}
+              >
+                &times;
+              </button>
+            </span>
+          ))}
+          {selectedLabelIds.length === 0 && <span style={{ color: '#999' }}>Nenhuma tag selecionada.</span>}
+        </div> */}
 
           {/* ARQUIVO */}
           <label style={labelStyle}>Arquivo (Obrigatório):</label>
