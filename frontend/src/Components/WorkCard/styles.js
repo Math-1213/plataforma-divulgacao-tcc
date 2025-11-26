@@ -21,6 +21,7 @@ export const Card = styled.button`
   &:hover {
     transform: translateY(-5px);
   }
+  width: 90%;
 `;
 
 // Título do Card
