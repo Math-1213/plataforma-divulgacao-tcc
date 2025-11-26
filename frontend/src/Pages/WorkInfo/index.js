@@ -32,7 +32,7 @@ export default function WorkInfo() {
 
         // Trata erro 401 (Não autorizado) ou falha de conexão
         if (err.response && err.response.status === 401) {
-          setError("⚠️ Sessão expirada. Faça login novamente para ver seus trabalhos.");
+          setError("Sessão expirada. Faça login novamente para ver seus trabalhos.");
         } else {
           setError("Falha ao carregar trabalhos. Verifique sua conexão com a API.");
         }

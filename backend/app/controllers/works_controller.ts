@@ -202,45 +202,98 @@ export default class WorksController {
       return response.status(500).json({ error: err.message })
     }
   }
-
-  /**
-   * Lista trabalhos do usuário logado (GET /my-works)
-   */
   public async myWorks({ request, response }: HttpContext) {
     let userId: string | null
 
-    // OBTENDO O userId DO TOKEN (Lógica de Autenticação)
+    // ----------------- AUTENTICAÇÃO VIA TOKEN -----------------
     try {
       const authHeader = request.header('Authorization')
       if (!authHeader) {
-        // Se não houver token, retorna 401 imediatamente
         return response.status(401).json({ error: 'Token de autorização ausente.' })
       }
+
       const token = authHeader.replace('Bearer ', '')
       const decodedToken = await auth.verifyIdToken(token)
-      userId = decodedToken.uid // <--- userId FINAL É OBTIDO AQUI!
 
+      userId = decodedToken.uid
       if (!userId) {
         return response.status(401).json({ error: 'Token inválido ou expirado.' })
       }
     } catch (err) {
-      // Captura falhas de verificação de token (expirado, inválido, etc.)
       return response.status(401).json({ error: 'Token inválido ou expirado.' })
     }
 
-    // 2. Lógica do método (Agora com userId VÁLIDO e SEGURO)
+    // ----------------- BUSCA TRABALHOS DO USUÁRIO -----------------
     try {
       const snapshot = await db
         .collection('works')
-        .where('authorIds', 'array-contains', userId) // <-- Usa o userId obtido do token
+        .where('authorIds', 'array-contains', userId)
         .orderBy('creationDate', 'desc')
         .get()
-      // Mapeamento de dados
+
+      if (snapshot.empty) return response.json([])
+
+      // ----------------- FORMATAÇÃO  -----------------
       const works = await Promise.all(
         snapshot.docs.map(async (doc) => {
           const data = doc.data()
-          // Simplificado para retornar apenas os dados brutos se o mapeamento for muito longo
-          return { id: doc.id, ...data }
+
+          // ---- CONVERTE DATA ----
+          let creationDate = null
+          if (data.creationDate?.seconds) {
+            creationDate = new Date(data.creationDate.seconds * 1000).toISOString()
+          }
+
+          // ---- RESOLVE AUTORES ----
+          let authors: any[] = []
+
+          if (Array.isArray(data.authorIds)) {
+            authors = await Promise.all(
+              data.authorIds.map(async (a) => {
+                // ID como string
+                if (typeof a === 'string') {
+                  const snap = await db.collection('users').doc(a).get()
+                  return { id: a, ...snap.data() }
+                }
+
+                // DocumentReference
+                if (a.get) {
+                  const snap = await a.get()
+                  return { id: snap.id, ...snap.data() }
+                }
+
+                return null
+              })
+            )
+          }
+
+          // ---- RESOLVE CURSO ----
+          let course = null
+
+          if (data.courseId) {
+            if (typeof data.courseId === 'string') {
+              const snap = await db.collection('courses').doc(data.courseId).get()
+              if (snap.exists) course = { id: snap.id, ...snap.data() }
+            } else if (data.courseId.get) {
+              const snap = await data.courseId.get()
+              if (snap.exists) course = { id: snap.id, ...snap.data() }
+            }
+          }
+
+          return {
+            id: doc.id,
+            title: data.title,
+            description: data.description,
+            creationDate,
+            authors,
+            course,
+            labels: data.labelsIds ?? [],
+            uploaderId: data.uploaderId ?? null,
+            fileName: data.fileName ?? null,
+            fileSize: data.fileSize ?? null,
+            fileType: data.fileType ?? null,
+            fileURL: data.fileURL ?? null,
+          }
         })
       )
 
@@ -250,7 +303,6 @@ export default class WorksController {
       return response.status(500).json({ error: err.message })
     }
   }
-
   /**
    * Busca um único trabalho pelo ID (GET /works/:id)
    * (Não precisa de autenticação)
