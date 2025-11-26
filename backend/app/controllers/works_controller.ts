@@ -328,13 +328,15 @@ export default class WorksController {
    * Atualiza um trabalho (PUT /works/:id)
    */
   public async update({ params, request, response }: HttpContext) {
-    let userId: string | null
+    let userId: string | null = null
+
+    // 1. Autenticação
     try {
-      // 1. Verifica a autenticação manualmente
       const authHeader = request.header('Authorization')
       if (!authHeader) {
         return response.status(401).json({ error: 'Token de autorização ausente.' })
       }
+
       const token = authHeader.replace('Bearer ', '')
       const decodedToken = await auth.verifyIdToken(token)
       userId = decodedToken.uid
@@ -349,7 +351,6 @@ export default class WorksController {
     // 2. Lógica do método
     try {
       const { id } = params
-      const { title, description, labelsIds } = request.only(['title', 'description', 'labelsIds'])
 
       const docRef = db.collection('works').doc(id)
       const doc = await docRef.get()
@@ -359,19 +360,68 @@ export default class WorksController {
       }
 
       const workData = doc.data()
+
+      // Só quem é author pode editar
       if (!workData?.authorIds.includes(userId)) {
-        return response
-          .status(403)
-          .json({ error: 'Você não tem permissão para editar este trabalho.' })
+        return response.status(403).json({
+          error: 'Você não tem permissão para editar este trabalho.',
+        })
       }
 
-      await docRef.update({
-        title,
-        description,
-        labelsIds,
+      // --------------------
+      // 3. Processar campos enviados
+      // --------------------
+      const body = request.body()
+      const fieldsToUpdate: any = {}
+
+      if (body.title !== undefined) fieldsToUpdate.title = body.title
+      if (body.description !== undefined) fieldsToUpdate.description = body.description
+
+      // labelsIds pode vir como string JSON
+      if (body.labelsIds !== undefined) {
+        try {
+          fieldsToUpdate.labelsIds =
+            typeof body.labelsIds === 'string' ? JSON.parse(body.labelsIds) : body.labelsIds
+        } catch {
+          return response.status(400).json({ error: 'Formato inválido para labelsIds.' })
+        }
+      }
+
+      // --------------------
+      // 4. Verificar se veio um novo arquivo
+      // --------------------
+      const workFile = request.file('work_file', {
+        size: '10mb',
+        extnames: ['pdf', 'doc', 'docx', 'zip', 'png', 'jpg', 'txt'],
       })
 
-      return response.json({ message: 'Trabalho atualizado com sucesso.' })
+      if (workFile) {
+        // Criar pasta se não existir
+        const uploadPath = app.tmpPath('uploads/works')
+        if (!fs.existsSync(uploadPath)) {
+          fs.mkdirSync(uploadPath, { recursive: true })
+        }
+
+        const newFileName = `${new Date().getTime()}-${workFile.clientName}`
+        await workFile.move(uploadPath, { name: newFileName, overwrite: true })
+
+        const fileURL = `/uploads/works/${newFileName}`
+
+        fieldsToUpdate.fileName = workFile.clientName
+        fieldsToUpdate.fileSize = workFile.size
+        fieldsToUpdate.fileType = workFile.extname
+        fieldsToUpdate.fileURL = fileURL
+      }
+
+      // --------------------
+      // 5. Atualizar no Firestore
+      // --------------------
+      await docRef.update(fieldsToUpdate)
+
+      return response.json({
+        message: 'Trabalho atualizado com sucesso.',
+        updated: fieldsToUpdate,
+      })
     } catch (err: any) {
       console.error('Erro ao atualizar trabalho:', err)
       return response.status(500).json({ error: err.message })

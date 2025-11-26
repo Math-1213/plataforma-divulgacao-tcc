@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import WorkCard from "../../Components/WorkCard";
-import { Container, Row, Col } from "react-bootstrap";
+import { Container, Row, Col, Button } from "react-bootstrap";
 import API from "../../Services/api";
+import { useNavigate, Link } from "react-router-dom";
 import Cookies from "js-cookie";
 import Header from "../../Components/Header";
 
@@ -10,6 +11,7 @@ export default function WorkInfo() {
   const [works, setWorks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null); // Novo estado para tratar erros de autenticação/API
+  const navigate = useNavigate();
 
   // --- 1. CHAMADA DE API FILTRADA ---
   useEffect(() => {
@@ -32,9 +34,13 @@ export default function WorkInfo() {
 
         // Trata erro 401 (Não autorizado) ou falha de conexão
         if (err.response && err.response.status === 401) {
-          setError("Sessão expirada. Faça login novamente para ver seus trabalhos.");
+          setError(
+            "Sessão expirada. Faça login novamente para ver seus trabalhos."
+          );
         } else {
-          setError("Falha ao carregar trabalhos. Verifique sua conexão com a API.");
+          setError(
+            "Falha ao carregar trabalhos. Verifique sua conexão com a API."
+          );
         }
         setLoading(false);
       }
@@ -70,21 +76,24 @@ export default function WorkInfo() {
   if (error) {
     return (
       <Container className="py-5 text-center">
-        <h2 style={{ color: 'red' }}>{error}</h2>
+        <h2 style={{ color: "red" }}>{error}</h2>
       </Container>
     );
   }
 
   return (
-
     <>
-      <Header
-        enableSearch={false}
-      />
+      <Header enableSearch={false} />
       <Container fluid className="py-4">
-        <Row className="justify-content-center text-center mb-4">
-          <Col xs={12}>
-            <h2 className="fw-bold text-dark">Meus Trabalhos Publicados</h2> {/* Título alterado */}
+        <Row className="align-items-center mb-4">
+          <Col xs={12} md={6}>
+            <h2 className="fw-bold text-dark m-0">Meus Trabalhos Publicados</h2>
+          </Col>
+
+          <Col xs={12} md={6} className="text-md-end text-center mt-3 mt-md-0">
+            <Link to="/addworks">
+              <Button variant="primary">Adicionar novo trabalho</Button>
+            </Link>
           </Col>
         </Row>
 
@@ -105,6 +114,7 @@ export default function WorkInfo() {
                   date={new Date(t.creationDate)}
                   labels={t.labels}
                   description={t.description}
+                  action={() => navigate(`/editwork/${t.id}`)}
                 />
               </Col>
             ))

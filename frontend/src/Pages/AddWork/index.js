@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import api from "../../Services/api";
 import Cookies from "js-cookie";
 import Header from "../../Components/Header";
@@ -39,15 +39,19 @@ export default function AddWork() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
+  // --- Edição ---
+  const { id } = useParams(); // se existir, estamos editando
+  const isEditing = Boolean(id);
+
   // 1. Buscar os dados ao carregar a página
   useEffect(() => {
     // Carrega o uid
     const uid = JSON.parse(Cookies.get("user")).uid || null;
     setUserID(uid);
 
-    const courseId = JSON.parse(Cookies.get("user")).course.id || null
-    setSelectedCourseId(courseId) 
-    
+    const courseId = JSON.parse(Cookies.get("user")).course.id || null;
+    setSelectedCourseId(courseId);
+
     // Carrega Informações
     async function loadData() {
       try {
@@ -65,6 +69,27 @@ export default function AddWork() {
           "Não foi possível carregar as listas de cursos, usuários ou labels."
         );
       }
+    }
+    // Se estiver editando, buscar dados do trabalho
+    if (isEditing) {
+      const loadWorkToEdit = async () => {
+        try {
+          const res = await api.get(`/works/${id}`);
+          const w = res.data;
+
+          setTitle(w.title);
+          setDescription(w.description || "");
+          setSelectedAuthorIds(w.authorIds || []);
+
+          // Arquivo não precisa setar (você não recebe o arquivo bruto)
+          // Só precisa permitir enviar um novo se quiser.
+        } catch (err) {
+          console.error("Erro ao carregar trabalho:", err);
+          setError("Não foi possível carregar os dados do trabalho.");
+        }
+      };
+
+      loadWorkToEdit();
     }
     loadData();
   }, []);
@@ -112,8 +137,8 @@ export default function AddWork() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!file || !title || !selectedCourseId) {
-      setError("Título, Curso e Arquivo são obrigatórios.");
+    if (!title || !selectedCourseId) {
+      setError("Título e Curso são obrigatórios.");
       return;
     }
 
@@ -125,34 +150,40 @@ export default function AddWork() {
     formData.append("title", title);
     formData.append("description", description);
     formData.append("courseId", selectedCourseId);
-
-    // Envia os arrays de IDs como JSON string
     formData.append("authorIds", JSON.stringify(selectedAuthorIds));
     formData.append("labelsIds", JSON.stringify(selectedLabelIds));
     formData.append("uploaderId", UserID);
 
-    try {
-      await api.post("/works", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+    // ENVIAR ARQUIVO SOMENTE SE O USUÁRIO TROCAR
+    if (file) formData.append("work_file", file);
 
-      setLoading(false);
-      alert("Trabalho enviado com sucesso!");
+    try {
+      if (isEditing) {
+        await api.put(`/works/${id}`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        alert("Trabalho atualizado com sucesso!");
+      } else {
+        await api.post("/works", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        alert("Trabalho enviado com sucesso!");
+      }
+
       navigate("/myworks");
     } catch (err) {
-      setLoading(false);
-      const errorMsg = err.response?.data?.error || err.message;
-      setError("Falha ao enviar o trabalho: " + errorMsg);
+      console.error(err);
+      setError("Falha ao salvar o trabalho.");
     }
+
+    setLoading(false);
   };
 
   return (
     <>
       <Header enableSearch={false} />
       <div style={{ padding: "20px" }}>
-        <h2>Adicionar Novo Trabalho</h2>
+        <h2>{isEditing ? "Editar Trabalho" : "Adicionar Novo Trabalho"}</h2>
 
         {error && (
           <div
@@ -186,8 +217,8 @@ export default function AddWork() {
             onChange={(e) => setDescription(e.target.value)}
           />
 
-        {/* CURSO (DROPDOWN) */}
-        {/* <label style={labelStyle}>Curso (Obrigatório):</label>
+          {/* CURSO (DROPDOWN) */}
+          {/* <label style={labelStyle}>Curso (Obrigatório):</label>
         <select
           style={inputStyle}
           value={selectedCourseId}
@@ -264,8 +295,8 @@ export default function AddWork() {
             )}
           </div>
 
-        {/* --- LABELS (SEARCHABLE MULTI-SELECT) --- */}
-        {/* <label style={labelStyle}>Tags / Labels:</label>
+          {/* --- LABELS (SEARCHABLE MULTI-SELECT) --- */}
+          {/* <label style={labelStyle}>Tags / Labels:</label>
         <div style={{ position: 'relative' }}>
           <input
             style={inputStyle}
@@ -289,8 +320,8 @@ export default function AddWork() {
           )}
         </div> */}
 
-        {/* Chips de Labels Selecionadas */}
-        {/* <div style={selectedContainerStyle}>
+          {/* Chips de Labels Selecionadas */}
+          {/* <div style={selectedContainerStyle}>
           {getSelectedItems(selectedLabelIds, availableLabels).map(label => (
             <span key={label.id} style={selectedItemStyle}>
               {label.name}
@@ -313,21 +344,25 @@ export default function AddWork() {
             type="file"
             name="work_file"
             onChange={handleFileChange}
-            required
+            required={!isEditing}
           />
 
           <button
             type="submit"
             style={{
               ...inputStyle,
-              background: "#28a745",
+              background: isEditing ? "#ffc107" : "#28a745",
               color: "white",
               cursor: "pointer",
               fontWeight: "bold",
             }}
             disabled={loading}
           >
-            {loading ? "Enviando..." : "Enviar Trabalho"}
+            {loading
+              ? "Salvando..."
+              : isEditing
+              ? "Salvar Alterações"
+              : "Enviar Trabalho"}
           </button>
         </form>
       </div>
