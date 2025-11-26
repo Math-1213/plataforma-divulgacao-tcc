@@ -22,6 +22,12 @@ export default function Header({
   const [filterCloseTrigger, setFilterCloseTrigger] = useState(false);
   const [user, setUser] = useState(null);
 
+  // Guarda os filtros retornados pelo FilterDropdown
+  const [activeFilters, setActiveFilters] = useState({
+    filters: ["Autor", "Curso"],
+    dateRange: { start: "", end: "" },
+  });
+
   useEffect(() => {
     const userCookie = Cookies.get("user");
     if (userCookie) {
@@ -35,14 +41,26 @@ export default function Header({
   }, []);
 
   function logout() {
-    console.log("Logout");
+    Cookies.remove("token");
+    Cookies.remove("user");
     navigate("/login");
   }
 
   function handleSearch(e) {
     e.preventDefault();
-    if (onSearch) onSearch(searchTerm);
+
+    if (onSearch) {
+      // envia busca + filtros juntos para o Home
+      onSearch(searchTerm, activeFilters);
+    }
+
+    // Fecha dropdown depois de buscar
     setFilterCloseTrigger(Date.now());
+  }
+
+  // Recebe filtros do componente filho
+  function handleFilterChange(filterData) {
+    setActiveFilters(filterData);
   }
 
   return (
@@ -63,7 +81,7 @@ export default function Header({
 
             {FilterDropdownComponent && (
               <FilterDropdownComponent
-                onFilterChange={(data) => console.log(data)}
+                onFilterChange={handleFilterChange}
                 closeTrigger={filterCloseTrigger}
               />
             )}

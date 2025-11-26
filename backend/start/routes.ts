@@ -23,7 +23,4 @@ router.resource('labels', '#controllers/labels_controller').apiOnly()
 router.post('/auth/signup', [AuthController, 'signup'])
 router.post('/auth/login', [AuthController, 'login'])
 router.get('/my-works', [WorksController, 'myWorks'])
-router.get('/uploads/works/:filename', async ({ params, response }) => {
-  const filePath = app.tmpPath(`uploads/works/${params.filename}`)
-  return response.download(filePath)
-})
+router.get('/uploads/works/:filename', [WorksController, 'getWorkFile'])

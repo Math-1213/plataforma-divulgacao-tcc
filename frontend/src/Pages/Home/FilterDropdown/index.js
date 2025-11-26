@@ -3,40 +3,50 @@ import { DropdownWrapper } from "../styles";
 import { FaCaretDown } from "react-icons/fa";
 
 export default function FilterDropdown({ onFilterChange, closeTrigger }) {
-  const filterOptions = ["Autor", "Curso", "Tema"];
+  const filterOptions = ["Autor", "Curso"];
   const [open, setOpen] = useState(false);
   const [selectedFilters, setSelectedFilters] = useState(filterOptions);
   const [dateRange, setDateRange] = useState({ start: "", end: "" });
 
-  // Fecha dropdown quando "Buscar" for clicado no Header
+  // Fecha dropdown quando o Header dispara o trigger
   useEffect(() => {
     if (closeTrigger) setOpen(false);
   }, [closeTrigger]);
+
+  // Dispara o retorno para o pai
+  function emitChange(updatedFilters, updatedRange) {
+    if (onFilterChange) {
+      onFilterChange({
+        filters: updatedFilters,
+        dateRange: updatedRange,
+      });
+    }
+  }
 
   function toggleFilter(filter) {
     const updated = selectedFilters.includes(filter)
       ? selectedFilters.filter((f) => f !== filter)
       : [...selectedFilters, filter];
+
     setSelectedFilters(updated);
-    if (onFilterChange) onFilterChange({ filters: updated, dateRange });
+    emitChange(updated, dateRange);
   }
 
   function handleDateChange(e) {
     const { name, value } = e.target;
     const updatedRange = { ...dateRange, [name]: value };
+
     setDateRange(updatedRange);
-    if (onFilterChange)
-      onFilterChange({ filters: selectedFilters, dateRange: updatedRange });
+    emitChange(selectedFilters, updatedRange);
   }
 
   function clearFilters() {
-    setSelectedFilters(filterOptions);
-    setDateRange({ start: "", end: "" });
-    if (onFilterChange)
-      onFilterChange({
-        filters: filterOptions,
-        dateRange: { start: "", end: "" },
-      });
+    const resetFilters = filterOptions;
+    const resetRange = { start: "", end: "" };
+
+    setSelectedFilters(resetFilters);
+    setDateRange(resetRange);
+    emitChange(resetFilters, resetRange);
   }
 
   return (
@@ -47,15 +57,14 @@ export default function FilterDropdown({ onFilterChange, closeTrigger }) {
         onClick={() => setOpen(!open)}
       >
         <div>
-          <span style={{fontSize: 16, color:"white"}}>
-            Filtros
-          </span>
+          <span style={{ fontSize: 16, color: "white" }}>Filtros</span>
           <FaCaretDown size={20} color="white" />
         </div>
       </button>
 
       {open && (
         <div className="dropdown-menu">
+          {/* Filtro por tipo */}
           <div className="filter-section">
             <p className="section-title">Filtrar por:</p>
             {filterOptions.map((filter) => (
@@ -72,6 +81,7 @@ export default function FilterDropdown({ onFilterChange, closeTrigger }) {
 
           <hr />
 
+          {/* Filtro por data */}
           <div className="filter-section">
             <p className="section-title">Data de Publicação</p>
             <div className="date-range">
