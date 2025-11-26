@@ -39,6 +39,15 @@ export default function Router() {
         />
 
         <Route
+          path="/editwork/:id"
+          element={
+            <PrivateRoute>
+              <AddWork />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
           path="/myworks"
           element={
             <PrivateRoute>
