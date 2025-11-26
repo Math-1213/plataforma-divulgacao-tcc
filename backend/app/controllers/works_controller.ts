@@ -202,45 +202,98 @@ export default class WorksController {
       return response.status(500).json({ error: err.message })
     }
   }
-
-  /**
-   * Lista trabalhos do usuário logado (GET /my-works)
-   */
   public async myWorks({ request, response }: HttpContext) {
     let userId: string | null
 
-    // OBTENDO O userId DO TOKEN (Lógica de Autenticação)
+    // ----------------- AUTENTICAÇÃO VIA TOKEN -----------------
     try {
       const authHeader = request.header('Authorization')
       if (!authHeader) {
-        // Se não houver token, retorna 401 imediatamente
         return response.status(401).json({ error: 'Token de autorização ausente.' })
       }
+
       const token = authHeader.replace('Bearer ', '')
       const decodedToken = await auth.verifyIdToken(token)
-      userId = decodedToken.uid // <--- userId FINAL É OBTIDO AQUI!
 
+      userId = decodedToken.uid
       if (!userId) {
         return response.status(401).json({ error: 'Token inválido ou expirado.' })
       }
     } catch (err) {
-      // Captura falhas de verificação de token (expirado, inválido, etc.)
       return response.status(401).json({ error: 'Token inválido ou expirado.' })
     }
 
-    // 2. Lógica do método (Agora com userId VÁLIDO e SEGURO)
+    // ----------------- BUSCA TRABALHOS DO USUÁRIO -----------------
     try {
       const snapshot = await db
         .collection('works')
-        .where('authorIds', 'array-contains', userId) // <-- Usa o userId obtido do token
+        .where('authorIds', 'array-contains', userId)
         .orderBy('creationDate', 'desc')
         .get()
-      // Mapeamento de dados
+
+      if (snapshot.empty) return response.json([])
+
+      // ----------------- FORMATAÇÃO  -----------------
       const works = await Promise.all(
         snapshot.docs.map(async (doc) => {
           const data = doc.data()
-          // Simplificado para retornar apenas os dados brutos se o mapeamento for muito longo
-          return { id: doc.id, ...data }
+
+          // ---- CONVERTE DATA ----
+          let creationDate = null
+          if (data.creationDate?.seconds) {
+            creationDate = new Date(data.creationDate.seconds * 1000).toISOString()
+          }
+
+          // ---- RESOLVE AUTORES ----
+          let authors: any[] = []
+
+          if (Array.isArray(data.authorIds)) {
+            authors = await Promise.all(
+              data.authorIds.map(async (a) => {
+                // ID como string
+                if (typeof a === 'string') {
+                  const snap = await db.collection('users').doc(a).get()
+                  return { id: a, ...snap.data() }
+                }
+
+                // DocumentReference
+                if (a.get) {
+                  const snap = await a.get()
+                  return { id: snap.id, ...snap.data() }
+                }
+
+                return null
+              })
+            )
+          }
+
+          // ---- RESOLVE CURSO ----
+          let course = null
+
+          if (data.courseId) {
+            if (typeof data.courseId === 'string') {
+              const snap = await db.collection('courses').doc(data.courseId).get()
+              if (snap.exists) course = { id: snap.id, ...snap.data() }
+            } else if (data.courseId.get) {
+              const snap = await data.courseId.get()
+              if (snap.exists) course = { id: snap.id, ...snap.data() }
+            }
+          }
+
+          return {
+            id: doc.id,
+            title: data.title,
+            description: data.description,
+            creationDate,
+            authors,
+            course,
+            labels: data.labelsIds ?? [],
+            uploaderId: data.uploaderId ?? null,
+            fileName: data.fileName ?? null,
+            fileSize: data.fileSize ?? null,
+            fileType: data.fileType ?? null,
+            fileURL: data.fileURL ?? null,
+          }
         })
       )
 
@@ -250,7 +303,6 @@ export default class WorksController {
       return response.status(500).json({ error: err.message })
     }
   }
-
   /**
    * Busca um único trabalho pelo ID (GET /works/:id)
    * (Não precisa de autenticação)
@@ -276,13 +328,15 @@ export default class WorksController {
    * Atualiza um trabalho (PUT /works/:id)
    */
   public async update({ params, request, response }: HttpContext) {
-    let userId: string | null
+    let userId: string | null = null
+
+    // 1. Autenticação
     try {
-      // 1. Verifica a autenticação manualmente
       const authHeader = request.header('Authorization')
       if (!authHeader) {
         return response.status(401).json({ error: 'Token de autorização ausente.' })
       }
+
       const token = authHeader.replace('Bearer ', '')
       const decodedToken = await auth.verifyIdToken(token)
       userId = decodedToken.uid
@@ -297,7 +351,6 @@ export default class WorksController {
     // 2. Lógica do método
     try {
       const { id } = params
-      const { title, description, labelsIds } = request.only(['title', 'description', 'labelsIds'])
 
       const docRef = db.collection('works').doc(id)
       const doc = await docRef.get()
@@ -307,19 +360,68 @@ export default class WorksController {
       }
 
       const workData = doc.data()
+
+      // Só quem é author pode editar
       if (!workData?.authorIds.includes(userId)) {
-        return response
-          .status(403)
-          .json({ error: 'Você não tem permissão para editar este trabalho.' })
+        return response.status(403).json({
+          error: 'Você não tem permissão para editar este trabalho.',
+        })
       }
 
-      await docRef.update({
-        title,
-        description,
-        labelsIds,
+      // --------------------
+      // 3. Processar campos enviados
+      // --------------------
+      const body = request.body()
+      const fieldsToUpdate: any = {}
+
+      if (body.title !== undefined) fieldsToUpdate.title = body.title
+      if (body.description !== undefined) fieldsToUpdate.description = body.description
+
+      // labelsIds pode vir como string JSON
+      if (body.labelsIds !== undefined) {
+        try {
+          fieldsToUpdate.labelsIds =
+            typeof body.labelsIds === 'string' ? JSON.parse(body.labelsIds) : body.labelsIds
+        } catch {
+          return response.status(400).json({ error: 'Formato inválido para labelsIds.' })
+        }
+      }
+
+      // --------------------
+      // 4. Verificar se veio um novo arquivo
+      // --------------------
+      const workFile = request.file('work_file', {
+        size: '10mb',
+        extnames: ['pdf', 'doc', 'docx', 'zip', 'png', 'jpg', 'txt'],
       })
 
-      return response.json({ message: 'Trabalho atualizado com sucesso.' })
+      if (workFile) {
+        // Criar pasta se não existir
+        const uploadPath = app.tmpPath('uploads/works')
+        if (!fs.existsSync(uploadPath)) {
+          fs.mkdirSync(uploadPath, { recursive: true })
+        }
+
+        const newFileName = `${new Date().getTime()}-${workFile.clientName}`
+        await workFile.move(uploadPath, { name: newFileName, overwrite: true })
+
+        const fileURL = `/uploads/works/${newFileName}`
+
+        fieldsToUpdate.fileName = workFile.clientName
+        fieldsToUpdate.fileSize = workFile.size
+        fieldsToUpdate.fileType = workFile.extname
+        fieldsToUpdate.fileURL = fileURL
+      }
+
+      // --------------------
+      // 5. Atualizar no Firestore
+      // --------------------
+      await docRef.update(fieldsToUpdate)
+
+      return response.json({
+        message: 'Trabalho atualizado com sucesso.',
+        updated: fieldsToUpdate,
+      })
     } catch (err: any) {
       console.error('Erro ao atualizar trabalho:', err)
       return response.status(500).json({ error: err.message })
