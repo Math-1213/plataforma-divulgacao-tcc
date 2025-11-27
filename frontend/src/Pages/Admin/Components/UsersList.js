@@ -19,7 +19,7 @@ export default function UsersList() {
     const term = search.toLowerCase();
     return (
       u.name?.toLowerCase().includes(term) ||
-      u.course?.toLowerCase().includes(term) ||
+      u.courseName?.toLowerCase().includes(term) ||
       u.email?.toLowerCase().includes(term)
     );
   });
@@ -49,7 +49,7 @@ export default function UsersList() {
           {filtered.map((u) => (
             <tr key={u.id}>
               <td>{u.name}</td>
-              <td>{u.course}</td>
+              <td>{u.courseName}</td>
               <td>{u.email}</td>
             </tr>
           ))}

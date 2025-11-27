@@ -21,7 +21,31 @@ export default class UsersController {
   public async index({ response }: HttpContext) {
     try {
       const snapshot = await this.collection.get()
-      const users = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+
+      const users = await Promise.all(
+        snapshot.docs.map(async (doc) => {
+          const data = doc.data()
+          let courseName = null
+
+          if (data.courseId && typeof data.courseId.get === 'function') {
+            // data.courseId é DocumentReference
+
+            const courseRef = data.courseId // referência
+            const courseDoc = await courseRef.get()
+
+            if (courseDoc.exists) {
+              courseName = courseDoc.data()?.name ?? null
+            }
+          }
+
+          return {
+            id: doc.id,
+            ...data,
+            courseName,
+          }
+        })
+      )
+
       return response.ok(users)
     } catch (error) {
       console.error('Erro ao listar usuários:', error)
@@ -98,7 +122,6 @@ export default class UsersController {
 
       const profileId = db.collection('profiles').doc(updates.profileId)
       updates.profileId = profileId
-
 
       const docRef = this.collection.doc(params.id)
       const doc = await docRef.get()

@@ -67,8 +67,9 @@ export default function WorksList() {
               <td>{w.title}</td>
 
               <td>
-                {Array.isArray(w.users)
-                  ? w.users.join(", ")
+              {console.log(w.authors)}
+                {Array.isArray(w.authors)
+                  ? w.authors.map(a => a.name).join(", ")
                   : "—"}
               </td>
             </tr>
