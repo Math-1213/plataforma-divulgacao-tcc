@@ -18,5 +18,5 @@ COPY . .
 EXPOSE 3333
 
 # Comando para iniciar o servidor
-CMD ["npm", "start"]
+CMD ["npm", "run", "dev"]
 
