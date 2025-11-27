@@ -7,7 +7,7 @@ import {
   SearchWrapper,
   AccountDropdown,
 } from "./styles";
-import { FaHome, FaUserCircle } from "react-icons/fa";
+import { FaHome, FaUserCircle, FaClipboardList  } from "react-icons/fa";
 import { RiLogoutBoxRLine } from "react-icons/ri";
 import Cookies from "js-cookie";
 
@@ -97,6 +97,15 @@ export default function Header({
             <button onClick={() => navigate("/home")} className="icon-btn">
               <FaHome />
             </button>
+          </li>
+          <li>
+            {(user && user.isAdmin) ? (
+              <button onClick={() => navigate("/admin")} className="icon-btn">
+                <FaClipboardList  />
+              </button>
+            ) : (
+              <></>
+            )}
           </li>
 
           <li className="account">
